@@ -1,4 +1,4 @@
-name: Test On Push2
+name: Test On Tag
 
 on:
   push:
