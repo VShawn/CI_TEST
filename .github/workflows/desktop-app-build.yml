@@ -40,59 +40,63 @@ name: .NET Core Desktop
 
 on:
   push:
-    branches: [ "dev_net6" ]
+    branches: ["1Remote_dev"]
   pull_request:
-    branches: [ "dev_net6" ]
+    branches: ["1Remote_dev"]
 
 jobs:
-
   build:
-
     strategy:
       matrix:
         configuration: [Debug, Release]
 
-    runs-on: windows-latest  # For a list of available runner types, refer to
-                             # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
+    runs-on:
+      windows-latest # For a list of available runner types, refer to
+      # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
 
     env:
-      Solution_Name: PRM.sln                         # Replace with your solution name, i.e. MyWpfApp.sln.
-      Test_Project_Path: PRemoteM.Tests\PRemoteM.Tests.csproj                 # Replace with the path to your test project, i.e. MyWpfApp.Tests\MyWpfApp.Tests.csproj.
-      Wap_Project_Directory: PRemoteM.Package    # Replace with the Wap project directory relative to the solution, i.e. MyWpfApp.Package.
-      Wap_Project_Path: PRemoteM.Package\PRemoteM.Package.wapproj                   # Replace with the path to your Wap project, i.e. MyWpf.App.Package\MyWpfApp.Package.wapproj.
+      Solution_Name: 1Remote.sln # Replace with your solution name, i.e. MyWpfApp.sln.
+      # Test_Project_Path: PRemoteM.Tests\PRemoteM.Tests.csproj # Replace with the path to your test project, i.e. MyWpfApp.Tests\MyWpfApp.Tests.csproj.
+      Wap_Project_Directory: Installer # Replace with the Wap project directory relative to the solution, i.e. MyWpfApp.Package.
+      Wap_Project_Path: Installer\Installer.wapproj # Replace with the path to your Wap project, i.e. MyWpf.App.Package\MyWpfApp.Package.wapproj.
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-        submodules: recursive
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: recursive
 
-    # Install the .NET Core workload
-    - name: Install .NET Core
-      uses: actions/setup-dotnet@v2
-      with:
-        dotnet-version: 6.0.x
+      # Install the .NET Core workload
+      - name: Install .NET Core
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: 6.0.x
 
-    # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
-    - name: Setup MSBuild.exe
-      uses: microsoft/setup-msbuild@v1.0.2
+      # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
+      - name: Setup MSBuild.exe
+        uses: microsoft/setup-msbuild@v1.0.2
 
-    # Execute all unit tests in the solution
-    # - name: Execute unit tests
-    #   run: dotnet test
+      # Execute all unit tests in the solution
+      # - name: Execute unit tests
+      #   run: dotnet test
 
-    # Restore the application to populate the obj folder with RuntimeIdentifiers
-    - name: Restore the application
-      run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration
-      env:
-        Configuration: ${{ matrix.configuration }}
+      # Restore the application to populate the obj folder with RuntimeIdentifiers
+      - name: Restore the application
+        run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration
+        env:
+          Configuration: ${{ matrix.configuration }}
 
+      - name: Build the application
+        run: msbuild $env:Solution_Name /t:rebuild /p:Configuration=$env:Configuration
+        env:
+          Configuration: ${{ matrix.configuration }}
 
-    - name: Build the application
-      run: msbuild $env:Solution_Name /t:rebuild /p:Configuration=$env:Configuration
-      env:
-        Configuration: ${{ matrix.configuration }}
+      - name: Easy Zip Files
+        uses: vimtor/action-zip@v1
+        with:
+          files: Ui/bin
+          dest: result.zip
 
     # # Decode the base 64 encoded pfx and save the Signing_Certificate
     # - name: Decode the pfx
