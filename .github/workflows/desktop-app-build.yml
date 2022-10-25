@@ -105,10 +105,10 @@ jobs:
           name: 1Remote.zip
           path: ${{ github.workspace }}/1Remote.zip
 
-      - uses: actions/download-artifact@v2
-        with:
-          name: 1Remote.zip
-          path: ${{ github.workspace }}/1Remote.zip
+      # - uses: actions/download-artifact@v2
+      #   with:
+      #     name: 1Remote.zip
+      #     path: ${{ github.workspace }}/1Remote.zip
 
       # - name: 读取当前版本号
       #   id: version
@@ -125,7 +125,7 @@ jobs:
           name: ${{ github.run_number }}
           body: ${{ github.ref }}
           draft: false
-          prerelease: false
+          prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
     # # Decode the base 64 encoded pfx and save the Signing_Certificate
