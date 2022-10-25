@@ -104,9 +104,7 @@ jobs:
         with:
           name: 1Remote.zip
           path: ${{ github.workspace }}/1Remote.zip
-  release:
-    needs: build
-    runs-on: windows-latest # For a list of available runner types, refer to https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
+
       - uses: actions/download-artifact@v2
         with:
           name: 1Remote.zip
@@ -123,14 +121,12 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: ${{ github.workspace }}/1Remote.zip
-          tag_name: ${{ github.ref }}
-          name: ${{ github.ref }}
+          tag_name: ${{ github.run_number }}
+          name: ${{ github.run_number }}
           body: ${{ github.ref }}
           draft: false
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
-
-
 
     # # Decode the base 64 encoded pfx and save the Signing_Certificate
     # - name: Decode the pfx
