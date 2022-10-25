@@ -1,0 +1,21 @@
+
+name: Test On Push
+
+on:
+  push:
+    branches:
+      - '*'
+
+jobs:
+  job1:
+    name: job1
+    runs-on: ubuntu-latest
+    steps:
+      - uses: mukunku/tag-exists-action@v1.0.0
+        id: checkTag
+        with: 
+          tag: 'v1'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: echo ${{ steps.checkTag.outputs.exists }}
