@@ -1,10 +1,9 @@
-
 name: Test On Push
 
 on:
   push:
     branches:
-      - '*'
+      - "*"
 
 jobs:
   job1:
@@ -13,9 +12,22 @@ jobs:
     steps:
       - uses: mukunku/tag-exists-action@v1.0.0
         id: checkTag
-        with: 
-          tag: 'v1'
+        with:
+          tag: "v1"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - run: echo ${{ steps.checkTag.outputs.exists }}
+
+      - name: run if tag exists
+        if: steps.checkTag.outputs.exists == 'true'
+        run: echo "tag exists"
+
+      - name: Get tag
+        if: steps.checkTag.outputs.exists == 'true'
+        id: get_tag
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+
+      - name: run if tag exists
+        if: steps.checkTag.outputs.exists == 'true'
+        run: echo ${{ steps.get_version.outputs.VERSION }}
