@@ -56,6 +56,7 @@ jobs:
 
     env:
       Solution_Name: 1Remote.sln # Replace with your solution name, i.e. MyWpfApp.sln.
+      Main_Project: Ui/Ui.csproj # Replace with your main project file name, i.e. MyWpfApp.csproj.
       # Test_Project_Path: PRemoteM.Tests\PRemoteM.Tests.csproj # Replace with the path to your test project, i.e. MyWpfApp.Tests\MyWpfApp.Tests.csproj.
       Wap_Project_Directory: Installer # Replace with the Wap project directory relative to the solution, i.e. MyWpfApp.Package.
       Wap_Project_Path: Installer\Installer.wapproj # Replace with the path to your Wap project, i.e. MyWpf.App.Package\MyWpfApp.Package.wapproj.
@@ -88,7 +89,12 @@ jobs:
           Configuration: ${{ matrix.configuration }}
 
       - name: Build the application
-        run: msbuild $env:Solution_Name /t:rebuild /p:Configuration=$env:Configuration
+        run: msbuild $env:Main_Project /t:rebuild /p:Configuration=$env:Configuration
+        env:
+          Configuration: ${{ matrix.configuration }}
+
+      - name: Publish the application
+        run: dotnet publish $env:Main_Project -p:PublishProfile=./Ui/Properties/PublishProfiles/x64-single.file.application.zip.pubxml
         env:
           Configuration: ${{ matrix.configuration }}
 
