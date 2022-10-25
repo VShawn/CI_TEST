@@ -41,8 +41,6 @@ name: .NET Core Desktop
 on:
   push:
     branches: ["1Remote_dev"]
-  pull_request:
-    branches: ["1Remote_dev"]
 
 jobs:
   build:
@@ -50,9 +48,7 @@ jobs:
       matrix:
         configuration: [Release]
 
-    runs-on:
-      windows-latest # For a list of available runner types, refer to
-      # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
+    runs-on: windows-latest # For a list of available runner types, refer to https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
 
     env:
       Solution_Name: 1Remote.sln # Replace with your solution name, i.e. MyWpfApp.sln.
@@ -102,12 +98,39 @@ jobs:
         uses: vimtor/action-zip@v1
         with:
           files: Ui/bin/Release/net6.0-windows/publish/win-x64
-          dest: result.zip
+          dest: 1Remote.zip
 
       - uses: actions/upload-artifact@v3
         with:
-          name: my-artifact
-          path: ${{ github.workspace }}/result.zip
+          name: 1Remote.zip
+          path: ${{ github.workspace }}/1Remote.zip
+  release:
+    needs: build
+    runs-on: windows-latest # For a list of available runner types, refer to https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
+      - uses: actions/download-artifact@v2
+        with:
+          name: 1Remote.zip
+          path: ${{ github.workspace }}/1Remote.zip
+
+      # - name: 读取当前版本号
+      #   id: version
+      #   uses: ashley-taylor/read-json-property-action@v1.0
+      #   with:
+      #     path: ./package.json
+      #     property: version
+
+      - name: publish to github release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ github.workspace }}/1Remote.zip
+          tag_name: ${{ github.ref }}
+          name: ${{ github.ref }}
+          body: ${{ github.ref }}
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+
 
     # # Decode the base 64 encoded pfx and save the Signing_Certificate
     # - name: Decode the pfx
