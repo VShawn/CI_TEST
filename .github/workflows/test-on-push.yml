@@ -1,6 +1,13 @@
 name: Main
 
-on: push
+on:
+  push:
+    branches:
+      - "*dev*"
+      - "*master*"
+      - "*main*"
+  tags:
+    - "*.*.*"
 
 jobs:
   build:

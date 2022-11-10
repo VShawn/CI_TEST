@@ -6,6 +6,7 @@ on:
       - "*dev*"
       - "*master*"
       - "*main*"
+      - "refs/tags/*"
 
 jobs:
   job1:
