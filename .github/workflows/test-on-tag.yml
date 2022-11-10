@@ -1,7 +1,13 @@
 name: Build/Publish on push
 
-on: push
-
+on:
+  push:
+    branches:
+      - "*dev*"
+      - "*master*"
+      - "*main*"
+    tags:
+      - "*"
 jobs:
   job1:
     name: build_and_release
@@ -40,7 +46,7 @@ jobs:
       # upload to artifact
       - uses: actions/upload-artifact@v3
         with:
-          name: 1Remote.zip
+          name: 1Remote
           path: Ui/bin/Release/net6.0-windows/publish/win-x64
 
       # zip

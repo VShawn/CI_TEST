@@ -6,7 +6,8 @@ on:
       - "*dev*"
       - "*master*"
       - "*main*"
-      - "refs/tags/*"
+    tags:
+      - "*"
 
 jobs:
   build:
