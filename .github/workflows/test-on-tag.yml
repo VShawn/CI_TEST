@@ -17,6 +17,7 @@ jobs:
       configuration: Release
       Solution_Name: 1Remote.sln
       Main_Project: Ui/Ui.csproj
+      NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
 
     steps:
       - name: Checkout
@@ -40,7 +41,7 @@ jobs:
         id: cache-nuget-packages
         uses: actions/cache@v3
         with:
-          path: packages
+          path: ${{ github.workspace }}/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('Ui/Ui.csproj') }}
 
       # Restore nuget packages
