@@ -1,12 +1,6 @@
 name: Build/Publish on push
 
-on:
-  push:
-    branches:
-      - "*dev*"
-      - "*master*"
-      - "*main*"
-      - "refs/tags/*"
+on: push
 
 jobs:
   job1:
