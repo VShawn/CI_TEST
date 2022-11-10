@@ -41,7 +41,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: nuget
-          key: ${{ runner.os }}-nuget-${{ hashFiles('Ui/Ui.csproj') }}-${{ $env:Configuration }}
+          key: ${{ runner.os }}-nuget-${{ hashFiles('Ui/Ui.csproj') }}
 
       # Restore nuget packages
       - name: Restore nuget packages 📦️
