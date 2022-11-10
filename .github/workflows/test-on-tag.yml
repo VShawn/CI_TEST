@@ -46,7 +46,6 @@ jobs:
 
       # Restore nuget packages
       - name: Restore nuget packages 📦️
-        if: steps.cache-nuget-packages.cache-hit != 'true'
         run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration
 
       # Publish the application
