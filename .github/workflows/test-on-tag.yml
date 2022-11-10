@@ -3,13 +3,53 @@ name: Test On Tag
 on:
   push:
     tags:
-      - "*"
+      - "*.*.*"
 
 jobs:
   job1:
-    name: job1
-    runs-on: ubuntu-latest
+    name: build_and_release
+    runs-on: windows-latest
+
+    env:
+      configuration: Release
+      Solution_Name: 1Remote.sln
+      Main_Project: Ui/Ui.csproj
+
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      # Install the .NET Core workload
+      - name: Install .NET Core
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: 6.0.x
+
+      # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
+      - name: Setup MSBuild.exe
+        uses: microsoft/setup-msbuild@v1.0.2
+
+      # Restore the application to populate the obj folder with RuntimeIdentifiers
+      - name: Restore the application
+        run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration
+        env:
+          Configuration: ${{ matrix.configuration }}
+
+      # Publish the application
+      - name: Publish the application
+        run: dotnet publish $env:Main_Project -p:PublishProfile=./Ui/Properties/PublishProfiles/x64-single.file.application.zip.pubxml
+        env:
+          Configuration: ${{ matrix.configuration }}
+
+      # upload to artifact
+      - uses: actions/upload-artifact@v3
+        with:
+          name: 1Remote.zip
+          path: Ui/bin/Release/net6.0-windows/publish/win-x64
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
