@@ -2,7 +2,7 @@ name: .NET Core Desktop
 
 on:
   push:
-    branches: ["1Remote_dev"]
+    branches: ["1Remote_dev_xxxx"]
 
 jobs:
   build:

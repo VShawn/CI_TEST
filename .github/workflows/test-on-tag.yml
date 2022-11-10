@@ -2,8 +2,10 @@ name: Test On Tag
 
 on:
   push:
-    tags:
-      - "*.*.*"
+    branches:
+      - "*dev*"
+      - "*master*"
+      - "*main*"
 
 jobs:
   job1:
@@ -46,11 +48,18 @@ jobs:
           name: 1Remote.zip
           path: Ui/bin/Release/net6.0-windows/publish/win-x64
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
+      # zip
+      - name: Easy Zip Files
+        uses: vimtor/action-zip@v1
         with:
           files: Ui/bin/Release/net6.0-windows/publish/win-x64
-          body: ${{ github.ref }}
+          dest: 1Remote.zip
+
+      # release
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: 1Remote.zip
           draft: false
           prerelease: true
-          token: ${{ secrets.GITHUB_TOKEN }}
