@@ -50,7 +50,8 @@ jobs:
 
       # Run script
       - shell: pwsh
-          env: SUPER_SECRET: ${{ secrets.GLOBAL_STRING_ENCRYPTION_SLAT }}
+        env:
+          SUPER_SECRET: ${{ secrets.GLOBAL_STRING_ENCRYPTION_SLAT }}
         run: ./scripts/Set-Slat.ps1 "%SUPER_SECRET%"
 
       # Publish the application
