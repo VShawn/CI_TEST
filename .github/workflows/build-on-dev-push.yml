@@ -41,8 +41,10 @@ jobs:
         id: cache-nuget-packages
         uses: actions/cache@v3
         with:
-          path: ${{ github.workspace }}/.nuget/packages
+          path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('Ui/Ui.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
 
       # Restore nuget packages
       - name: Restore nuget packages 📦️
