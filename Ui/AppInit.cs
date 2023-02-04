@@ -1,4 +1,4 @@
-ï»¿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -65,7 +65,7 @@ namespace _1RM
         {
             SimpleLogHelper.WriteLogLevel = SimpleLogHelper.EnumLogLevel.Disabled;
             // TODO Set salt by github action with repository secret
-            UnSafeStringEncipher.Init("***SALT***");
+            UnSafeStringEncipher.Init("1");
             Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory); // in case user start app in a different working dictionary.
         }
 
@@ -113,7 +113,7 @@ namespace _1RM
                             _isNewUser = true;
                         }
                     }
-                    else if (forcePortable == false && forceAppData == true)    // æ ‡è®°äº†å¼ºåˆ¶ AppData æ¨¡å¼
+                    else if (forcePortable == false && forceAppData == true)    // ±ê¼ÇÁËÇ¿ÖÆ AppData Ä£Ê½
                     {
                         isPortableMode = false;
                         if (appDataProfilePathExisted == false)
@@ -123,7 +123,7 @@ namespace _1RM
                             _isNewUser = true;
                         }
                     }
-                    else // æ ‡å¿—æ–‡ä»¶éƒ½å­˜åœ¨æˆ–éƒ½ä¸å­˜åœ¨æ—¶
+                    else // ±êÖ¾ÎÄ¼ş¶¼´æÔÚ»ò¶¼²»´æÔÚÊ±
                     {
                         if (File.Exists(AppPathHelper.FORCE_INTO_APPDATA_MODE))
                             File.Delete(AppPathHelper.FORCE_INTO_APPDATA_MODE);
@@ -147,7 +147,7 @@ namespace _1RM
                         }
                         else
                         {
-                            // portable é…ç½®æ–‡ä»¶ä¸å­˜åœ¨ï¼Œæ— è®º app_data çš„é…ç½®æ˜¯å¦å­˜åœ¨éƒ½è¿›å¼•å¯¼
+                            // portable ÅäÖÃÎÄ¼ş²»´æÔÚ£¬ÎŞÂÛ app_data µÄÅäÖÃÊÇ·ñ´æÔÚ¶¼½øÒıµ¼
                             profileModeIsPortable = !appDataProfilePathExisted;
                             profileModeIsEnabled = true;
                             _isNewUser = true;
@@ -162,14 +162,14 @@ namespace _1RM
                             PRemoteMTransferHelper.ReadAsync();
                         }
 
-                        // æ–°ç”¨æˆ·æ˜¾ç¤ºå¼•å¯¼çª—å£
+                        // ĞÂÓÃ»§ÏÔÊ¾Òıµ¼´°¿Ú
                         var guidanceWindowViewModel = new GuidanceWindowViewModel(LanguageService, NewConfiguration, profileModeIsPortable, profileModeIsEnabled);
                         var guidanceWindow = new GuidanceWindow(guidanceWindowViewModel);
                         guidanceWindow.ShowDialog();
                         isPortableMode = guidanceWindowViewModel.ProfileModeIsPortable;
                     }
 
-                    // è‡ªåŠ¨åˆ›å»ºæ ‡å¿—æ–‡ä»¶
+                    // ×Ô¶¯´´½¨±êÖ¾ÎÄ¼ş
                     if (permissionForPortable)
                     {
                         try
@@ -197,7 +197,7 @@ namespace _1RM
                 }
                 AppPathHelper.Instance = isPortableMode ? portablePaths : appDataPaths;
 
-                // æœ€ç»ˆæ–‡ä»¶æƒé™æ£€æŸ¥
+                // ×îÖÕÎÄ¼şÈ¨ÏŞ¼ì²é
                 {
                     var paths = AppPathHelper.Instance;
                     WritePermissionCheck(paths.BaseDirPath, false);
@@ -209,7 +209,7 @@ namespace _1RM
                     WritePermissionCheck(paths.LocalityJsonPath, true);
                 }
 
-                // æ–‡ä»¶å¤¹åˆ›å»º
+                // ÎÄ¼ş¼Ğ´´½¨
                 {
                     var paths = AppPathHelper.Instance;
                     CreateDirIfNotExist(paths.BaseDirPath, false);

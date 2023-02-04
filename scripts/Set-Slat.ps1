@@ -21,6 +21,8 @@ if (!$file) {
     throw "Error: AppInit.cs does not exist."
 }
 
+echo "new slat:"$Slat 
+
 # Replace the content of the file (***SALT***) with the input Slat
 $file | ForEach-Object {
 # 

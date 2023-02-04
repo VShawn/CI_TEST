@@ -52,7 +52,12 @@ jobs:
       - shell: pwsh
         env:
           SUPER_SECRET: ${{ secrets.GLOBAL_STRING_ENCRYPTION_SLAT }}
-        run: ./scripts/Set-Slat.ps1 "%SUPER_SECRET%"
+        run: |
+          ./scripts/Set-Slat.ps1 "%SUPER_SECRET%"
+          echo "${{ github.ref }}"
+          echo "%SUPER_SECRET%"
+          echo "${{ secrets.GLOBAL_STRING_ENCRYPTION_SLAT }}%"
+          echo "%GITHUB_SHA%"
 
       # Publish the application
       - name: Publish the application
