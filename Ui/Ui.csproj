@@ -303,6 +303,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <None Update="Please install .NET6 Desktop Runtime if it not works.txt">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
+	<ItemGroup>
 		<Page Update="Controls\AutoCompleteComboBox.xaml">
 			<SubType>Designer</SubType>
 		</Page>
