@@ -44,6 +44,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
 
+      - name: Cache nuget packages
+        id: cache-nuget-packages-home
+        uses: actions/cache@v3
+        with:
+          path: $HOME\.nuget\packages
+          key: ${{ runner.os }}-nuget-home-${{ hashFiles('Ui/Ui.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-home
+
       # Restore nuget packages
       - name: Restore nuget packages 📦️
         run: msbuild $env:Main_Project /t:Restore /p:Configuration=$env:Configuration
