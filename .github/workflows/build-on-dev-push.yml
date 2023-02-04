@@ -53,7 +53,7 @@ jobs:
         env:
           SUPER_SECRET: ${{ secrets.GLOBAL_STRING_ENCRYPTION_SLAT }}
         run: |
-          ./scripts/Set-Slat.ps1 "%SUPER_SECRET%"
+          ./scripts/Set-Slat.ps1 ${{ secrets.GLOBAL_STRING_ENCRYPTION_SLAT }} 
           echo "${{ github.ref }}"
           echo "%SUPER_SECRET%"
           echo "${{ secrets.GLOBAL_STRING_ENCRYPTION_SLAT }}%"
