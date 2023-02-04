@@ -51,15 +51,13 @@ jobs:
         run: msbuild $env:Main_Project /t:Restore /p:Configuration=$env:Configuration
 
       # Run script
-      - shell: pwsh
+      - name: Run script
+        shell: pwsh
         env:
           SUPER_SECRET: ${{ secrets.GLOBAL_STRING_ENCRYPTION_SLAT }}
         run: |
-          ./scripts/Set-Slat.ps1 ${{ secrets.GLOBAL_STRING_ENCRYPTION_SLAT }} 
           echo "${{ github.ref }}"
-          echo "%SUPER_SECRET%"
-          echo "${{ secrets.GLOBAL_STRING_ENCRYPTION_SLAT }}%"
-          echo "%GITHUB_SHA%"
+          ./scripts/Set-Slat.ps1 ${{ secrets.GLOBAL_STRING_ENCRYPTION_SLAT }}
 
       # Publish the application
       - name: Publish the application
