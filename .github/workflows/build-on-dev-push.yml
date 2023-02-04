@@ -25,15 +25,15 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
-      # Install the .NET Core workload
+      # Install the .NET Core workload https://github.com/actions/setup-dotnet
       - name: Install .NET Core
-        uses: actions/setup-dotnet@v2
+        uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 6.0.x
 
-      # Add MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
-      - name: Setup MSBuild.exe
-        uses: microsoft/setup-msbuild@v1.1
+      # # Add MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
+      # - name: Setup MSBuild.exe
+      #   uses: microsoft/setup-msbuild@v1.1
 
       # cache nuget packages: https://github.com/actions/cache
       - name: Cache nuget packages
@@ -45,9 +45,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
 
-      # Restore nuget packages
-      - name: Restore nuget packages 📦️
-        run: msbuild $env:Main_Project /t:Restore /p:Configuration=$env:Configuration
+      # # Restore nuget packages
+      # - name: Restore nuget packages 📦️
+      #   run: msbuild $env:Main_Project /t:Restore /p:Configuration=$env:Configuration
 
       # Run script
       - name: Run script
