@@ -65,10 +65,9 @@ jobs:
         run: |
           echo "${{ github.ref }}"
           ./scripts/Set-Slat.ps1 ${{ secrets.GLOBAL_STRING_ENCRYPTION_SLAT }}
-          echo ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          echo "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           echo $HOME
           echo ${{ github.home }}
-          echo ${{ home }}
 
       # Publish the application
       - name: Publish the application
