@@ -12,7 +12,6 @@ jobs:
   job1:
     name: build_and_release
     runs-on: windows-latest
-    environment: production
 
     env:
       configuration: Release
@@ -32,16 +31,16 @@ jobs:
         with:
           dotnet-version: 6.0.x
 
-      # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
+      # Add MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
       - name: Setup MSBuild.exe
-        uses: microsoft/setup-msbuild@v1.0.2
+        uses: microsoft/setup-msbuild@v1.1
 
-      # cache nuget packages
+      # cache nuget packages: https://github.com/actions/cache
       - name: Cache nuget packages
         id: cache-nuget-packages
         uses: actions/cache@v3
         with:
-          path: ~/.nuget/packages
+          path: ${{ github.workspace }}\.nuget\packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('Ui/Ui.csproj') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
