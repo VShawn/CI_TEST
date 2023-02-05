@@ -16,6 +16,15 @@ jobs:
     env:
       configuration: Release
       Main_Project: Ui/Ui.csproj
+      Action_Url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+    steps:
+      - name: Echo
+        shell: pwsh
+        run: |
+          echo "url = $env:Action_Url"
+          echo "home = $HOME"
+          echo "github.ref = ${{ github.ref }}"
 
     steps:
       - name: Checkout
@@ -60,14 +69,8 @@ jobs:
       # Run script
       - name: Run script
         shell: pwsh
-        env:
-          SUPER_SECRET: ${{ secrets.GLOBAL_STRING_ENCRYPTION_SLAT }}
         run: |
-          echo "${{ github.ref }}"
           ./scripts/Set-Slat.ps1 ${{ secrets.GLOBAL_STRING_ENCRYPTION_SLAT }}
-          echo "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          echo "$HOME"
-          echo "${{ github.home }}"
 
       # Publish the application
       - name: Publish the application
