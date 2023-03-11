@@ -33,8 +33,6 @@ jobs:
 
       - name: Get Version1
         run: echo "V=${{steps.get_version.outputs.Version}}"
-      - name: Get Version2
-        run: echo "V=${{steps.get_version.outputs.Version1}}"
           
       # zip
       - name: Easy Zip Files
