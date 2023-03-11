@@ -24,11 +24,12 @@ if ($preRelease -eq "" -and $build -eq 0) {
     $versionString = "$major.$minor.$patch.$build-$preRelease"
 }
 
+# Set the current directory back to the original location
+Set-Location $originalDirectory
+
 # Write-Output $versionString
 # Write-Output "::set-output name=Version::$versionString"
 "Version=$versionString" >> $env:GITHUB_ENV
 
 # echo "Version=$versionString" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
 
-# Set the current directory back to the original location
-Set-Location $originalDirectory
