@@ -25,6 +25,11 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
+          
+      # Version
+      - name: Get Version
+        id: get_version
+        run: ./scripts/Get-Version.ps1
 
       # Install the .NET Core workload
       - name: Install .NET Core
@@ -66,7 +71,7 @@ jobs:
       # upload to artifact
       - uses: actions/upload-artifact@v3
         with:
-          name: 1Remote
+          name: 1Remote-${{steps.get_version.outputs.Version}}
           path: Ui/bin/Release/net6.0-windows/publish/win-x64
 
       # zip
