@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -30,15 +31,11 @@ namespace _1RM.Model.Protocol.Base
     {
         [JsonIgnore] public string ServerEditorDifferentOptions => IoC.Get<ILanguageService>().Translate("server_editor_different_options").Replace(" ", "-");
 
-        protected ProtocolBase(string protocol, string classVersion, string protocolDisplayName, string protocolDisplayNameInShort = "")
+        protected ProtocolBase(string protocol, string classVersion, string protocolDisplayName)
         {
             Protocol = protocol;
             ClassVersion = classVersion;
             ProtocolDisplayName = protocolDisplayName;
-            if (string.IsNullOrWhiteSpace(protocolDisplayNameInShort))
-                ProtocolDisplayNameInShort = ProtocolDisplayName;
-            else
-                ProtocolDisplayNameInShort = protocolDisplayNameInShort;
         }
 
         public abstract bool IsOnlyOneInstance();
@@ -80,9 +77,6 @@ namespace _1RM.Model.Protocol.Base
 
         [JsonIgnore]
         public string ProtocolDisplayName { get; }
-
-        [JsonIgnore]
-        public string ProtocolDisplayNameInShort { get; }
 
         private string _displayName = "";
         public string DisplayName
@@ -274,9 +268,26 @@ namespace _1RM.Model.Protocol.Base
         /// </summary>
         public ProtocolBase Clone()
         {
-            var clone = this.MemberwiseClone() as ProtocolBase;
+            //{
+            //    var json = ToJsonString();
+            //    var jsonClone = ItemCreateHelper.CreateFromJsonString(json);
+            //    if (jsonClone != null)
+            //    {
+            //        jsonClone.Id = this.Id;
+            //        jsonClone.DataSourceName = this.DataSourceName;
+            //        return jsonClone;
+            //    }
+            //}
+
+
+            var clone = (ProtocolBase)this.MemberwiseClone();
             Debug.Assert(clone != null);
-            clone.Tags = new List<string>(this.Tags);
+            clone!.Tags = new List<string>(this.Tags);
+            if (this is ProtocolBaseWithAddressPortUserPwd p
+                && clone is ProtocolBaseWithAddressPortUserPwd c)
+            {
+                c.AlternateCredentials = new(p.AlternateCredentials.Select(x => x.CloneMe()));
+            }
             return clone;
         }
 
@@ -333,7 +344,7 @@ namespace _1RM.Model.Protocol.Base
         }
 
 
-        public virtual bool ThisTimeConnWithFullScreen()
+        public virtual bool IsThisTimeConnWithFullScreen()
         {
             return false;
         }

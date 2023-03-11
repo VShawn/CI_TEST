@@ -68,7 +68,7 @@
             <Grid Style="{StaticResource GridOneRow}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" SharedSizeGroup="ExternalRunnerColumn1"></ColumnDefinition>
-                    <ColumnDefinition Width="*"></ColumnDefinition>
+                    <ColumnDefinition Width="290"></ColumnDefinition>
                     <ColumnDefinition Width="Auto" SharedSizeGroup="ExternalRunnerColumn3"></ColumnDefinition>
                 </Grid.ColumnDefinitions>
                 <TextBlock Style="{StaticResource TextBlockTitleColumn}" Text="{DynamicResource 'Exe path'}"></TextBlock>
@@ -95,7 +95,7 @@
             <Grid Style="{StaticResource GridOneRow}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" SharedSizeGroup="ExternalRunnerColumn1"></ColumnDefinition>
-                    <ColumnDefinition Width="*"></ColumnDefinition>
+                    <ColumnDefinition Width="290"></ColumnDefinition>
                     <ColumnDefinition Width="Auto" SharedSizeGroup="ExternalRunnerColumn3"></ColumnDefinition>
                 </Grid.ColumnDefinitions>
                 <TextBlock Style="{StaticResource TextBlockTitleColumn}" Text="{DynamicResource 'Cmd parameter'}"></TextBlock>
@@ -104,7 +104,7 @@
             <Grid Style="{StaticResource GridOneRow}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" SharedSizeGroup="ExternalRunnerColumn1"></ColumnDefinition>
-                    <ColumnDefinition Width="*"></ColumnDefinition>
+                    <ColumnDefinition Width="290"></ColumnDefinition>
                     <ColumnDefinition Width="Auto" SharedSizeGroup="ExternalRunnerColumn3"></ColumnDefinition>
                 </Grid.ColumnDefinitions>
                 <TextBlock Style="{StaticResource TextBlockTitleColumn}" Text="{DynamicResource 'Login with password'}"></TextBlock>
@@ -132,7 +132,7 @@
                         </Style>
                     </Border.Style>
                 </Border>
-                <controls:BindableAvalonEditor Grid.Column="1" 
+                <controls:BindableAvalonEditor Grid.Column="1"
                                                Margin="8 0 4 0"
                                                Padding="0 5 0 5"
                                                x:Name="TextEditor"
@@ -162,7 +162,7 @@
             <Grid Style="{StaticResource GridOneRow}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" SharedSizeGroup="ExternalRunnerColumn1"></ColumnDefinition>
-                    <ColumnDefinition Width="*"></ColumnDefinition>
+                    <ColumnDefinition Width="290"></ColumnDefinition>
                     <ColumnDefinition Width="Auto" SharedSizeGroup="ExternalRunnerColumn3"></ColumnDefinition>
                 </Grid.ColumnDefinitions>
                 <TextBlock Style="{StaticResource TextBlockTitleColumn}" Text="{DynamicResource 'Login with ssh private key'}"></TextBlock>
@@ -221,7 +221,7 @@
             <Grid Style="{StaticResource GridOneRow}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" SharedSizeGroup="ExternalRunnerColumn1"></ColumnDefinition>
-                    <ColumnDefinition Width="*"></ColumnDefinition>
+                    <ColumnDefinition Width="290"></ColumnDefinition>
                     <ColumnDefinition Width="Auto" SharedSizeGroup="ExternalRunnerColumn3"></ColumnDefinition>
                 </Grid.ColumnDefinitions>
                 <StackPanel>
@@ -283,14 +283,9 @@
 
                                     <Button Grid.Column="2" Width="10" Height="10"
                                             ToolTip="{DynamicResource 'Delete'}"
-                                            Style="{StaticResource ButtonBarPrimaryStyle}"
-                                            Background="Transparent"
-                                            attachProperty:VisionElement.BackgroundAccent="Transparent"
-                                            attachProperty:VisionElement.BackgroundOnMouseDown="Transparent"
+                                            Style="{StaticResource ButtonBarTransparentStyle}"
                                             HorizontalAlignment="Right"
                                             Opacity="0.8"
-                                            attachProperty:VisionElement.Opacity="0.6"
-                                            attachProperty:VisionElement.OpacityAccent="1"
                                             Command="{Binding DataContext.CmdDelEnvironmentVariable, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type protocolConfig:ExternalRunnerSettings}}}" 
                                             CommandParameter="{Binding }"
                                             Margin="0 0 10 0">
@@ -309,10 +304,7 @@
                     <Button Width="20" Height="20" 
                             Margin="20 0 20 0"
                             ToolTip="{DynamicResource 'Add environment variables'}"
-                            Style="{StaticResource ButtonBarAccentBackgroundStyle}"
-                            Background="Transparent"
-                            attachProperty:VisionElement.BackgroundAccent="Transparent"
-                            attachProperty:VisionElement.BackgroundOnMouseDown="Transparent"
+                            Style="{StaticResource ButtonBarTransparentStyle}"
                             HorizontalAlignment="Left"
                             Command="{Binding CmdAddEnvironmentVariable}">
                         <Grid Height="15" Width="15">
@@ -329,7 +321,7 @@
             <Grid Style="{StaticResource GridOneRow}" ToolTip="{DynamicResource 'Hosting this exe in 1Remote tab view?'}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" SharedSizeGroup="ExternalRunnerColumn1"></ColumnDefinition>
-                    <ColumnDefinition Width="*"></ColumnDefinition>
+                    <ColumnDefinition Width="290"></ColumnDefinition>
                     <ColumnDefinition Width="Auto" SharedSizeGroup="ExternalRunnerColumn3"></ColumnDefinition>
                 </Grid.ColumnDefinitions>
                 <TextBlock Style="{StaticResource TextBlockTitleColumn}" Text="{DynamicResource 'Hosting'}"></TextBlock>

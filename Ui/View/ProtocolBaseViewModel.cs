@@ -31,12 +31,25 @@ namespace _1RM.View
 
         public string DisplayName => Server.DisplayName;
         public string SubTitle => Server.SubTitle;
-        public string ProtocolDisplayNameInShort => Server.ProtocolDisplayNameInShort;
+        public string ProtocolDisplayNameInShort => Server.ProtocolDisplayName;
 
         /// <summary>
         /// like: "#work #asd", display in launcher page.
         /// </summary>
         public string TagString { get; private set; }
+
+        public int CustomOrder
+        {
+            get
+            {
+                if (IoC.TryGet<LocalityService>() == null)
+                    return 0;
+                else if (IoC.Get<LocalityService>().ServerCustomOrder.ContainsKey(Id) == true)
+                    return IoC.Get<LocalityService>().ServerCustomOrder[Id];
+                else
+                    return int.MaxValue;
+            }
+        }
 
 
         private ProtocolBase _server;
@@ -79,7 +92,6 @@ namespace _1RM.View
 
         public ProtocolBaseViewModel(ProtocolBase psb)
         {
-            Debug.Assert(psb != null);
             Server = psb;
             _server = psb;
 
@@ -138,9 +150,9 @@ namespace _1RM.View
 
 
         private object? _subTitleControl = null;
-        public object? SubTitleControl
+        public object SubTitleControl
         {
-            get => _subTitleControl ??= OrgSubTitleControl;
+            get { return _subTitleControl ??= OrgSubTitleControl; }
             set => SetAndNotifyIfChanged(ref _subTitleControl, value);
         }
 
@@ -186,7 +198,7 @@ namespace _1RM.View
             {
                 return _cmdConnServer ??= new RelayCommand(o =>
                 {
-                    GlobalEventHelper.OnRequestServerConnect?.Invoke(Server.Id);
+                    GlobalEventHelper.OnRequestServerConnect?.Invoke(Server, fromView: nameof(MainWindowView));
                 });
             }
         }

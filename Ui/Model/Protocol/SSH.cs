@@ -3,8 +3,6 @@ using Newtonsoft.Json;
 using _1RM.Model.Protocol.Base;
 using _1RM.Utils.KiTTY;
 using Shawn.Utils;
-using _1RM.Service.DataSource;
-using _1RM.Service.DataSource.Model;
 
 namespace _1RM.Model.Protocol
 {
@@ -104,6 +102,27 @@ namespace _1RM.Model.Protocol
         {
             base.ConnectPreprocess();
             StartupAutoCommand = StartupAutoCommand.Replace(@"""", @"\""");
+        }
+
+
+
+        public override Credential GetCredential()
+        {
+            var c = new Credential()
+            {
+                Address = Address,
+                Port = Port,
+                Password = Password,
+                UserName = UserName,
+                PrivateKeyPath = PrivateKey,
+            };
+            return c;
+        }
+
+        public override void SetCredential(in Credential credential)
+        {
+            base.SetCredential(credential);
+            PrivateKey = credential.PrivateKeyPath;
         }
     }
 }

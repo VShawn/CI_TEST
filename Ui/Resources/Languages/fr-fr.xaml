@@ -68,6 +68,7 @@
     <s:String x:Key="All">Tous</s:String>
     <s:String x:Key="Protocol">Protocole</s:String>
     <s:String x:Key="Cameras">Cameras</s:String>
+    <s:String x:Key="Upload">Télécharger</s:String>
     <s:String x:Key="filter_mainwindow">Mots-clés ou '#' + nom de tag</s:String>
     <s:String x:Key="Search (Ctrl+F)">Rechercher (Ctrl + F)</s:String>
     <s:String x:Key="hotkey_already_registered">Raccourci clavier déjà enregistré</s:String>
@@ -248,4 +249,18 @@
     <s:String x:Key="Please select a Data Source">Please select a Data Source</s:String>
     <s:String x:Key="Test connection">Test connection</s:String>
     <s:String x:Key="Show XXX button">Show `{0}` button</s:String>
+    <s:String x:Key="Show recently used here">Afficher récemment utilisé ici</s:String>
+    <s:String x:Key="Hide recently used">Masquer récemment utilisé</s:String>
+    <s:String x:Key="Leave blank to inherit the default value">Laisser vide pour hériter de la valeur par défaut</s:String>
+    <s:String x:Key="Alternative">Alternative</s:String>
+    <s:String x:Key="with alternative">avec alternative</s:String>
+    <s:String x:Key="Automatic address switching">Changement d'adresse automatique</s:String>
+    <s:String x:Key="When the default host or port is unavailable the alternate addresses will be tried in sequence">Lorsque l'hôte ou le port par défaut n'est pas disponible, les adresses alternatives seront essayées dans l'ordre</s:String>
+    <s:String x:Key="support multi-address multi-account">support multi-address multi-account</s:String>
+    <s:String x:Key="Detecting your alternate host...">Detecting your alternate host...</s:String>
+    <s:String x:Key="XXX is already existed!">`{0}` is already existed!</s:String>
+    <s:String x:Key="XXX is not existed!">`{0}` is not existed!</s:String>
+    <s:String x:Key="Show credentials info">Afficher les informations d'identification</s:String>
+    <s:String x:Key="Sorting">Tri</s:String>
+    <s:String x:Key="Sort by drag">Trier par glissement</s:String>
 </ResourceDictionary>

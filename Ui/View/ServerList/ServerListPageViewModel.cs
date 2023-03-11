@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -11,8 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
-using System.Windows.Documents;
-using _1RM.Controls.NoteDisplay;
 using _1RM.Model;
 using _1RM.Model.DAO;
 using _1RM.Model.Protocol;
@@ -26,14 +23,13 @@ using _1RM.Utils.mRemoteNG;
 using _1RM.Utils.RdpFile;
 using _1RM.View.Editor;
 using _1RM.View.Settings;
-using CredentialManagement;
+using _1RM.View.Utils;
 using Newtonsoft.Json;
 using Shawn.Utils;
 using Shawn.Utils.Interface;
 using Shawn.Utils.Wpf;
 using Shawn.Utils.Wpf.FileSystem;
 using Stylet;
-using Credential = CredentialManagement.Credential;
 
 namespace _1RM.View.ServerList
 {
@@ -70,35 +66,19 @@ namespace _1RM.View.ServerList
             get => _selectedServerViewModelListItem;
             set => SetAndNotifyIfChanged(ref _selectedServerViewModelListItem, value);
         }
-
-        private ObservableCollection<ProtocolBaseViewModel> _vmServerList = new ObservableCollection<ProtocolBaseViewModel>();
-        public ObservableCollection<ProtocolBaseViewModel> VmServerList
-        {
-            get => _vmServerList;
-            set
-            {
-                SetAndNotifyIfChanged(ref _vmServerList, value);
-                SelectedServerViewModelListItem = null;
-                _vmServerList.CollectionChanged += (s, e) =>
-                {
-                    RaisePropertyChanged(nameof(IsAnySelected));
-                    RaisePropertyChanged(nameof(IsSelectedAll));
-                    RaisePropertyChanged(nameof(SelectedCount));
-                };
-            }
-        }
+        public ObservableCollection<ProtocolBaseViewModel> VmServerList { get; set; } = new ObservableCollection<ProtocolBaseViewModel>();
 
         public int SelectedCount => VmServerList.Count(x => x.IsSelected);
 
-        private EnumServerOrderBy _serverOrderBy = EnumServerOrderBy.IdAsc;
         public EnumServerOrderBy ServerOrderBy
         {
-            get => _serverOrderBy;
+            get => IoC.Get<LocalityService>().ServerOrderBy;
             set
             {
-                if (SetAndNotifyIfChanged(ref _serverOrderBy, value))
+                if (value != IoC.Get<LocalityService>().ServerOrderBy)
                 {
                     IoC.Get<LocalityService>().ServerOrderBy = value;
+                    RaisePropertyChanged();
                 }
             }
         }
@@ -153,15 +133,23 @@ namespace _1RM.View.ServerList
             {
                 if (SetAndNotifyIfChanged(ref this._briefNoteVisibility, value))
                 {
-                    foreach (var item in VmServerList.Where(x => x.HoverNoteDisplayControl != null))
-                    {
-                        if (item.HoverNoteDisplayControl != null)
-                        {
-                            item.HoverNoteDisplayControl.IsBriefNoteShown = value == Visibility.Visible;
-                        }
-                    }
+                    UpdateNote();
                 }
             }
+        }
+
+        private void UpdateNote()
+        {
+            Execute.OnUIThreadSync(() =>
+            {
+                foreach (var item in VmServerList.Where(x => x.HoverNoteDisplayControl != null))
+                {
+                    if (item.HoverNoteDisplayControl != null)
+                    {
+                        item.HoverNoteDisplayControl.IsBriefNoteShown = BriefNoteVisibility == Visibility.Visible;
+                    }
+                }
+            });
         }
 
         private TagsPanelViewModel? _tagListViewModel = null;
@@ -184,11 +172,11 @@ namespace _1RM.View.ServerList
             TagsPanelViewModel = IoC.Get<TagsPanelViewModel>();
 
             {
-                var showNoteFieldInListView = IoC.Get<ConfigurationService>().Launcher.ShowNoteFieldInListView;
                 // Make sure the update do triggered the first time assign a value 
-                _briefNoteVisibility = showNoteFieldInListView == false ? Visibility.Visible : Visibility.Collapsed;
-                BriefNoteVisibility = showNoteFieldInListView == true ? Visibility.Visible : Visibility.Collapsed;
+                BriefNoteVisibility = IoC.Get<ConfigurationService>().General.ShowNoteFieldInListView ? Visibility.Visible : Visibility.Collapsed;
             }
+
+            RebuildVmServerList();
         }
 
         protected override void OnViewLoaded()
@@ -198,19 +186,15 @@ namespace _1RM.View.ServerList
                 GlobalEventHelper.OnRequestDeleteServer += server =>
                 {
                     if (string.IsNullOrEmpty(server.Id) == false
-                        && true == MessageBoxHelper.Confirm(IoC.Get<ILanguageService>().Translate("confirm_to_delete_selected")))
+                        && true == MessageBoxHelper.Confirm(IoC.Get<ILanguageService>().Translate("confirm_to_delete_selected"), ownerViewModel: IoC.Get<MainWindowViewModel>()))
                     {
                         AppData.DeleteServer(server);
                     }
                 };
             }
 
-
             AppData.OnDataReloaded += RebuildVmServerList;
-            RebuildVmServerList();
-
-            ServerOrderBy = IoC.Get<LocalityService>().ServerOrderBy;
-            ApplySort(ServerOrderBy);
+            ApplySort();
         }
 
 
@@ -230,40 +214,30 @@ namespace _1RM.View.ServerList
             {
                 Execute.OnUIThread(() =>
                 {
-                    VmServerList = new ObservableCollection<ProtocolBaseViewModel>(AppData.VmItemList);
-                    ApplySort(ServerOrderBy);
-                    RaisePropertyChanged(nameof(IsAnySelected));
-                    RaisePropertyChanged(nameof(IsSelectedAll));
-                    RaisePropertyChanged(nameof(SelectedCount));
+                    VmServerList = new ObservableCollection<ProtocolBaseViewModel>(
+                        // in order to implement the `custom` order 
+                        // !!! VmItemList should order by CustomOrder by default
+                        AppData.VmItemList.OrderBy(x => x.CustomOrder).ThenBy(x => x.Id));
+                    RaisePropertyChanged(nameof(VmServerList));
+                    SelectedServerViewModelListItem = null;
+                    VmServerList.CollectionChanged += (s, e) =>
+                    {
+                        RaisePropertyChanged(nameof(IsAnySelected));
+                        RaisePropertyChanged(nameof(IsSelectedAll));
+                        RaisePropertyChanged(nameof(SelectedCount));
+                    };
                     foreach (var vs in VmServerList)
                     {
                         vs.IsSelected = false;
                         vs.PropertyChanged -= VmServerPropertyChanged;
                         vs.PropertyChanged += VmServerPropertyChanged;
                     }
+                    RaisePropertyChanged(nameof(IsAnySelected));
+                    RaisePropertyChanged(nameof(IsSelectedAll));
+                    RaisePropertyChanged(nameof(SelectedCount));
+                    UpdateNote();
 
-                    if (this.View is ServerListPageView v)
-                    {
-                        var cvs = CollectionViewSource.GetDefaultView(v.LvServerCards.ItemsSource);
-                        if (cvs != null)
-                        {
-                            if (SourceService.AdditionalSources.Count > 0)
-                            {
-                                if (cvs.GroupDescriptions.Count == 0)
-                                {
-                                    cvs.GroupDescriptions.Add(new PropertyGroupDescription(nameof(ProtocolBase.DataSourceName)));
-                                }
-                            }
-
-                            if (SourceService.AdditionalSources.Count == 0)
-                            {
-                                if (cvs.GroupDescriptions.Count > 0)
-                                {
-                                    cvs.GroupDescriptions.Clear();
-                                }
-                            }
-                        }
-                    }
+                    ApplySort();
                 });
             }
         }
@@ -278,8 +252,9 @@ namespace _1RM.View.ServerList
             }
         }
 
-        private void ApplySort(EnumServerOrderBy orderBy)
+        public void ApplySort()
         {
+            var orderBy = ServerOrderBy;
             if (this.View is ServerListPageView v)
             {
                 Execute.OnUIThread(() =>
@@ -291,6 +266,14 @@ namespace _1RM.View.ServerList
                         switch (orderBy)
                         {
                             case EnumServerOrderBy.IdAsc:
+                                cvs.SortDescriptions.Add(new SortDescription(nameof(ProtocolBaseViewModel.Id), ListSortDirection.Ascending));
+                                break;
+                            case EnumServerOrderBy.Custom:
+                                //cvs.SortDescriptions.Add(new SortDescription(nameof(ProtocolBaseViewModel.CustomOrder), ListSortDirection.Ascending));
+                                // in order to implement the `custom` order 
+                                // !!! VmItemList should order by CustomOrder by default
+                                // !!! and the SortDescriptions should be empty!
+                                cvs.SortDescriptions.Clear();
                                 break;
                             case EnumServerOrderBy.ProtocolAsc:
                                 cvs.SortDescriptions.Add(new SortDescription(nameof(ProtocolBaseViewModel.ProtocolDisplayNameInShort), ListSortDirection.Ascending));
@@ -311,9 +294,27 @@ namespace _1RM.View.ServerList
                                 cvs.SortDescriptions.Add(new SortDescription(nameof(ProtocolBaseViewModel.SubTitle), ListSortDirection.Descending));
                                 break;
                             default:
-                                throw new ArgumentOutOfRangeException();
+                                SimpleLogHelper.Error($"ApplySort: type {orderBy} is not supported");
+                                MsAppCenterHelper.Error(new NotImplementedException($"ApplySort: type {orderBy} is not supported"));
+                                break;
                         }
                         //cvs.Refresh();
+                    }
+
+
+                    if (cvs != null)
+                    {
+                        if (SourceService.AdditionalSources.Any(x => x.Value.CachedProtocols.Count > 0))
+                        {
+                            if (cvs.GroupDescriptions.Count == 0)
+                            {
+                                cvs.GroupDescriptions.Add(new PropertyGroupDescription(nameof(ProtocolBase.DataSourceName)));
+                            }
+                        }
+                        else
+                        {
+                            cvs.GroupDescriptions.Clear();
+                        }
                     }
                 });
             }
@@ -361,7 +362,7 @@ namespace _1RM.View.ServerList
             if (_keywordDecoded == null)
                 return true;
 
-            var s = TagAndKeywordEncodeHelper.MatchKeywords(server, _keywordDecoded);
+            var s = TagAndKeywordEncodeHelper.MatchKeywords(server, _keywordDecoded, false);
             return s.Item1;
         }
 
@@ -427,10 +428,10 @@ namespace _1RM.View.ServerList
                 {
                     // select save to which source
                     DataSourceBase? source = null;
-                    if (IoC.Get<ConfigurationService>().AdditionalDataSource.Any(x => x.Status == EnumDbStatus.OK))
+                    if (IoC.Get<ConfigurationService>().AdditionalDataSource.Any(x => x.Status == EnumDatabaseStatus.OK))
                     {
                         var vm = new DataSourceSelectorViewModel();
-                        if (IoC.Get<IWindowManager>().ShowDialog(vm, IoC.Get<MainWindowViewModel>()) != true)
+                        if (MaskLayerController.ShowDialogWithMask(vm) != true)
                             return;
                         source = SourceService.GetDataSource(vm.SelectedSource.DataSourceName);
                     }
@@ -446,7 +447,7 @@ namespace _1RM.View.ServerList
                     var path = SelectFileHelper.OpenFile(title: IoC.Get<ILanguageService>().Translate("import_server_dialog_title"), filter: "json|*.json|*.*|*.*");
                     if (path == null) return;
 
-                    var id = MaskLayerController.ShowProcessingRingMainWindow(IoC.Get<ILanguageService>().Translate("system_options_data_security_info_data_processing"));
+                    MaskLayerController.ShowProcessingRing(IoC.Get<ILanguageService>().Translate("system_options_data_security_info_data_processing"), IoC.Get<MainWindowViewModel>());
                     Task.Factory.StartNew(() =>
                     {
                         try
@@ -465,16 +466,16 @@ namespace _1RM.View.ServerList
 
                             source.Database_InsertServer(list);
                             AppData.ReloadServerList(true);
-                            MessageBoxHelper.Info(IoC.Get<ILanguageService>().Translate("import_done_0_items_added", list.Count.ToString()), ownerViewModel: IoC.Get<MainWindowViewModel>());
+                            MessageBoxHelper.Info(IoC.Get<ILanguageService>().Translate("import_done_0_items_added", list.Count.ToString()));
                         }
                         catch (Exception e)
                         {
                             SimpleLogHelper.Warning(e);
-                            Execute.OnUIThread(() => { MessageBoxHelper.ErrorAlert(IoC.Get<ILanguageService>().Translate("import_failure_with_data_format_error")); });
+                            MessageBoxHelper.ErrorAlert(IoC.Get<ILanguageService>().Translate("import_failure_with_data_format_error"));
                         }
                         finally
                         {
-                            MaskLayerController.HideProcessingRing(id);
+                            MaskLayerController.HideMask(IoC.Get<MainWindowViewModel>());
                         }
                     });
                 });
@@ -492,10 +493,10 @@ namespace _1RM.View.ServerList
                 {
                     // select save to which source
                     DataSourceBase? source = null;
-                    if (IoC.Get<ConfigurationService>().AdditionalDataSource.Any(x => x.Status == EnumDbStatus.OK))
+                    if (IoC.Get<ConfigurationService>().AdditionalDataSource.Any(x => x.Status == EnumDatabaseStatus.OK))
                     {
                         var vm = new DataSourceSelectorViewModel();
-                        if (IoC.Get<IWindowManager>().ShowDialog(vm, IoC.Get<MainWindowViewModel>()) != true)
+                        if (MaskLayerController.ShowDialogWithMask(vm) != true)
                             return;
                         source = SourceService.GetDataSource(vm.SelectedSource.DataSourceName);
                     }
@@ -508,7 +509,7 @@ namespace _1RM.View.ServerList
 
                     var path = SelectFileHelper.OpenFile(title: IoC.Get<ILanguageService>().Translate("import_server_dialog_title"), filter: "csv|*.csv");
                     if (path == null) return;
-                    var id = MaskLayerController.ShowProcessingRingMainWindow(IoC.Get<ILanguageService>().Translate("system_options_data_security_info_data_processing"));
+                    MaskLayerController.ShowProcessingRing(IoC.Get<ILanguageService>().Translate("system_options_data_security_info_data_processing"), IoC.Get<MainWindowViewModel>());
                     Task.Factory.StartNew(() =>
                     {
                         try
@@ -529,7 +530,7 @@ namespace _1RM.View.ServerList
                         }
                         finally
                         {
-                            MaskLayerController.HideProcessingRing(id);
+                            MaskLayerController.HideMask(IoC.Get<MainWindowViewModel>());
                         }
                     });
                 });
@@ -546,10 +547,10 @@ namespace _1RM.View.ServerList
                 {
                     // select save to which source
                     DataSourceBase? source = null;
-                    if (IoC.Get<ConfigurationService>().AdditionalDataSource.Any(x => x.Status == EnumDbStatus.OK))
+                    if (IoC.Get<ConfigurationService>().AdditionalDataSource.Any(x => x.Status == EnumDatabaseStatus.OK))
                     {
                         var vm = new DataSourceSelectorViewModel();
-                        if (IoC.Get<IWindowManager>().ShowDialog(vm, IoC.Get<MainWindowViewModel>()) != true)
+                        if (MaskLayerController.ShowDialogWithMask(vm) != true)
                             return;
                         source = SourceService.GetDataSource(vm.SelectedSource.DataSourceName);
                     }
@@ -573,7 +574,7 @@ namespace _1RM.View.ServerList
                             try
                             {
                                 // try read user name & password from CredentialManagement.
-                                using var cred = new Credential()
+                                using var cred = new CredentialManagement.Credential()
                                 {
                                     Target = "TERMSRV/" + rdp.Address,
                                 };
@@ -616,7 +617,7 @@ namespace _1RM.View.ServerList
                 {
                     var ss = VmServerList.Where(x => x.IsSelected == true && x.IsEditable).ToList();
                     if (!(ss?.Count > 0)) return;
-                    if (true == MessageBoxHelper.Confirm(IoC.Get<ILanguageService>().Translate("confirm_to_delete_selected")))
+                    if (true == MessageBoxHelper.Confirm(IoC.Get<ILanguageService>().Translate("confirm_to_delete_selected"), ownerViewModel: IoC.Get<MainWindowViewModel>()))
                     {
                         var servers = ss.Select(x => x.Server);
                         AppData.DeleteServer(servers);
@@ -665,25 +666,49 @@ namespace _1RM.View.ServerList
             {
                 return _cmdReOrder ??= new RelayCommand((o) =>
                 {
-                    if (int.TryParse(o?.ToString() ?? "0", out int ot))
-                    {
-                        if ((DateTime.Now - _lastCmdReOrder).TotalMilliseconds > 200)
-                        {
-                            _lastCmdReOrder = DateTime.Now;
-                            // cancel order
-                            if (ServerOrderBy == (EnumServerOrderBy)(ot + 1))
-                            {
-                                ot = -1;
-                            }
-                            else if (ServerOrderBy == (EnumServerOrderBy)ot)
-                            {
-                                ++ot;
-                            }
+                    if ((DateTime.Now - _lastCmdReOrder).TotalMilliseconds < 200)
+                        return;
+                    _lastCmdReOrder = DateTime.Now;
 
-                            ServerOrderBy = (EnumServerOrderBy)ot;
-                            ApplySort(ServerOrderBy);
+                    var newOrderBy = EnumServerOrderBy.IdAsc;
+                    if (int.TryParse(o?.ToString() ?? "0", out var ot)
+                        && ot is >= (int)EnumServerOrderBy.IdAsc and <= (int)EnumServerOrderBy.Custom)
+                    {
+                        newOrderBy = (EnumServerOrderBy)ot;
+                    }
+                    else if (o is EnumServerOrderBy x)
+                    {
+                        newOrderBy = x;
+                    }
+
+                    if (newOrderBy is EnumServerOrderBy.IdAsc or EnumServerOrderBy.Custom)
+                    {
+                        ServerOrderBy = newOrderBy;
+                    }
+                    else
+                    {
+                        try
+                        {
+                            // cancel order
+                            if (ServerOrderBy == newOrderBy + 1)
+                            {
+                                newOrderBy = EnumServerOrderBy.IdAsc;
+                            }
+                            else if (ServerOrderBy == newOrderBy)
+                            {
+                                newOrderBy += 1;
+                            }
+                        }
+                        catch
+                        {
+                            newOrderBy = EnumServerOrderBy.IdAsc;
+                        }
+                        finally
+                        {
+                            ServerOrderBy = newOrderBy;
                         }
                     }
+                    ApplySort();
                 });
             }
         }
@@ -704,7 +729,7 @@ namespace _1RM.View.ServerList
                         token = DateTime.Now.Ticks.ToString();
                     foreach (var vmProtocolServer in VmServerList.Where(x => x.IsSelected == true).ToArray())
                     {
-                        GlobalEventHelper.OnRequestServerConnect?.Invoke(vmProtocolServer.Id, token);
+                        GlobalEventHelper.OnRequestServerConnect?.Invoke(vmProtocolServer.Server, fromView: $"{nameof(MainWindowView)}", assignTabToken: token);
                         Thread.Sleep(50);
                     }
                 });
@@ -723,7 +748,7 @@ namespace _1RM.View.ServerList
             {
                 return _cmdHideNoteField ??= new RelayCommand((o) =>
                 {
-                    IoC.Get<ConfigurationService>().Launcher.ShowNoteFieldInListView = false;
+                    IoC.Get<ConfigurationService>().General.ShowNoteFieldInListView = false;
                     IoC.Get<ConfigurationService>().Save();
                     BriefNoteVisibility = Visibility.Collapsed;
                 });
@@ -738,7 +763,7 @@ namespace _1RM.View.ServerList
             {
                 return _cmdShowNoteField ??= new RelayCommand((o) =>
                 {
-                    IoC.Get<ConfigurationService>().Launcher.ShowNoteFieldInListView = true;
+                    IoC.Get<ConfigurationService>().General.ShowNoteFieldInListView = true;
                     IoC.Get<ConfigurationService>().Save();
                     BriefNoteVisibility = Visibility.Visible;
                 });

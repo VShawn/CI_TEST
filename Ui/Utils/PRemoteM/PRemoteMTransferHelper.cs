@@ -14,6 +14,7 @@ using _1RM.Model.Protocol.Base;
 using _1RM.Service;
 using _1RM.Service.DataSource;
 using _1RM.View;
+using _1RM.View.Utils;
 using com.github.xiangyuecn.rsacsharp;
 using Dapper;
 using Newtonsoft.Json;
@@ -44,9 +45,9 @@ namespace _1RM.Utils.PRemoteM
         {
             if (_servers?.Any() == true)
             {
-                if (MessageBoxHelper.Confirm($"Do you want to transfer sessions from `{_dbPath}`?", "Data transfer"))
+                if (MessageBoxHelper.Confirm($"Do you want to transfer sessions from `{_dbPath}`?", "Data transfer", ownerViewModel: IoC.Get<MainWindowViewModel>()))
                 {
-                    var id = MaskLayerController.ShowProcessingRing(msg: "Data transfer in progress", layerContainer: IoC.Get<MainWindowViewModel>());
+                    MaskLayerController.ShowProcessingRing(msg: "Data transfer in progress", assignLayerContainer: IoC.Get<MainWindowViewModel>());
                     Task.Factory.StartNew(() =>
                     {
                         try
@@ -63,8 +64,9 @@ namespace _1RM.Utils.PRemoteM
 
                             var localSource = IoC.Get<DataSourceService>().LocalDataSource;
                             Debug.Assert(localSource != null);
-                            localSource.Database_InsertServer(_servers);
+                            localSource!.Database_InsertServer(_servers);
                             IoC.Get<GlobalData>().ReloadServerList(true);
+                            MessageBoxHelper.Info($"All done! You may need to delete `{_dbPath}`...", ownerViewModel: IoC.Get<MainWindowViewModel>());
                         }
                         catch (Exception e)
                         {
@@ -72,7 +74,7 @@ namespace _1RM.Utils.PRemoteM
                         }
                         finally
                         {
-                            MaskLayerController.HideProcessingRing(id);
+                            MaskLayerController.HideMask(IoC.Get<MainWindowViewModel>());
                             Clear();
                         }
                     });
@@ -80,7 +82,7 @@ namespace _1RM.Utils.PRemoteM
             }
         }
 
-        public static void Clear()
+        private static void Clear()
         {
             _dbPathList = null;
             _servers.Clear();
@@ -152,7 +154,7 @@ namespace _1RM.Utils.PRemoteM
 
         private static void StartTask()
         {
-            var dataBase = new DapperDataBaseFree();
+            var dataBase = new DapperDatabaseFree();
             try
             {
                 if (_dbPathList?.Count > 0 == false)
@@ -206,7 +208,7 @@ namespace _1RM.Utils.PRemoteM
                             if (server is { })
                             {
                                 // DecryptToRamLevel
-                                if(rsa != null)
+                                if (rsa != null)
                                 {
                                     server.DisplayName = DecryptOrReturnOriginalString(rsa, server.DisplayName);
                                     if (server.GetType().IsSubclassOf(typeof(ProtocolBaseWithAddressPort)))

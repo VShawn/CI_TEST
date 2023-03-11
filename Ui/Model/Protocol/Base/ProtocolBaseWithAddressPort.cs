@@ -1,17 +1,18 @@
-﻿using Shawn.Utils;
+﻿using System.Collections.ObjectModel;
+using Shawn.Utils;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace _1RM.Model.Protocol.Base
 {
     public abstract class ProtocolBaseWithAddressPort : ProtocolBase
     {
-        protected ProtocolBaseWithAddressPort(string protocol, string classVersion, string protocolDisplayName, string protocolDisplayNameInShort = "") : base(protocol, classVersion, protocolDisplayName, protocolDisplayNameInShort)
+        protected ProtocolBaseWithAddressPort(string protocol, string classVersion, string protocolDisplayName) : base(protocol, classVersion, protocolDisplayName)
         {
         }
 
         #region Conn
 
         private string _address = "";
-
         [OtherName(Name = "HOSTNAME")]
         public string Address
         {
@@ -38,6 +39,45 @@ namespace _1RM.Model.Protocol.Base
         protected override string GetSubTitle()
         {
             return $"{Address}:{Port}";
+        }
+
+
+        private ObservableCollection<Credential>? _alternateCredentials = new ObservableCollection<Credential>();
+        public ObservableCollection<Credential> AlternateCredentials
+        {
+            get => _alternateCredentials ??= new ObservableCollection<Credential>();
+            set => SetAndNotifyIfChanged(ref _alternateCredentials, value);
+        }
+
+
+        private bool? _isAutoAlternateAddressSwitching = false;
+        public bool? IsAutoAlternateAddressSwitching
+        {
+            get => _isAutoAlternateAddressSwitching;
+            set => SetAndNotifyIfChanged(ref _isAutoAlternateAddressSwitching, value);
+        }
+
+        public virtual Credential GetCredential()
+        {
+            var c = new Credential()
+            {
+                Address = Address,
+                Port = Port,
+            };
+            return c;
+        }
+
+        public virtual void SetCredential(in Credential credential)
+        {
+            if (!string.IsNullOrEmpty(credential.Address))
+            {
+                Address = credential.Address;
+            }
+
+            if (!string.IsNullOrEmpty(credential.Port))
+            {
+                Port = credential.Port;
+            }
         }
 
         #endregion Conn

@@ -97,11 +97,11 @@ namespace _1RM.View.Settings.ProtocolConfig
                         if (string.IsNullOrWhiteSpace(str))
                             return _languageService.Translate("Can not be empty!");
                         if (c.Runners.Any(x => x.Name == str))
-                            return _languageService.Translate("{0} is existed!", str);
+                            return _languageService.Translate("XXX is already existed!", str);
                         return "";
                     }), ownerViewModel: IoC.Get<MainWindowViewModel>());
 
-                    if (string.IsNullOrEmpty(name) == false && c.Runners.All(x => x.Name != name))
+                    if (name != null && string.IsNullOrEmpty(name) == false && c.Runners.All(x => x.Name != name))
                     {
                         var newRunner = new ExternalRunner(name, SelectedProtocol) { MarcoNames = c.MarcoNames };
                         if (SelectedProtocol == SSH.ProtocolName || SelectedProtocol == SFTP.ProtocolName)
@@ -125,7 +125,7 @@ namespace _1RM.View.Settings.ProtocolConfig
                     var pn = o?.ToString();
                     if (pn == null) return;
 
-                    if (true == MessageBoxHelper.Confirm(IoC.Get<ILanguageService>().Translate("confirm_to_delete")))
+                    if (true == MessageBoxHelper.Confirm(IoC.Get<ILanguageService>().Translate("confirm_to_delete"), ownerViewModel: IoC.Get<MainWindowViewModel>()))
                     {
                         var c = _protocolConfigurationService.ProtocolConfigs[_selectedProtocol];
                         if (string.IsNullOrEmpty(pn) == false && c.Runners.Any(x => x.Name == pn))

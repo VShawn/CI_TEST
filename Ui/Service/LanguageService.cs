@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Windows;
 using _1RM.Model;
+using _1RM.Utils;
 using Shawn.Utils;
 using Shawn.Utils.Interface;
 using Shawn.Utils.Wpf;
@@ -74,8 +75,9 @@ namespace _1RM.Service
             if (LanguageCode2Name.ContainsKey(code)) return;
             var r = GetResourceDictionaryByXamlUri(path);
             Debug.Assert(r != null);
-            Debug.Assert(r.Contains("language_name"));
-            AddLanguage(code, r["language_name"].ToString()!, r);
+            Debug.Assert(r?.Contains("language_name") == true);
+            if (r != null)
+                AddLanguage(code, r["language_name"].ToString()!, r);
         }
 
         private static ResourceDictionary? GetResourceDictionaryByXamlUri(string path)
@@ -168,6 +170,7 @@ namespace _1RM.Service
             if (_applicationResourceDictionary.Contains(key))
                 return _applicationResourceDictionary[key].ToString() ?? key;
 
+            MsAppCenterHelper.Error(new DirectoryNotFoundException($"int {_languageCode}, key not found: {key}"));
 #if DEBUG
             var tw = new StreamWriter("need translation " + _languageCode + ".txt", true);
             tw.WriteLine(key);

@@ -5,16 +5,13 @@ using System.Diagnostics;
 using System.Linq;
 using System.Timers;
 using _1RM.Model.DAO;
-using _1RM.Model.Protocol;
 using _1RM.Model.Protocol.Base;
 using _1RM.Service;
 using _1RM.Service.DataSource;
 using _1RM.Service.DataSource.Model;
 using _1RM.View;
 using _1RM.View.Launcher;
-using _1RM.View.ServerList;
 using Shawn.Utils;
-using Stylet;
 using ServerListPageViewModel = _1RM.View.ServerList.ServerListPageViewModel;
 
 namespace _1RM.Model
@@ -126,6 +123,12 @@ namespace _1RM.Model
             _configurationService.Save();
         }
 
+        public ProtocolBaseViewModel? GetItemById(string dataSourceName, string serverId)
+        {
+            return VmItemList.FirstOrDefault(x => x.Server.DataSourceName == dataSourceName
+                                                  && x.Id == serverId);
+        }
+
 
         /// <summary>
         /// reload data based on `LastReadFromDataSourceMillisecondsTimestamp` and `DataSourceDataUpdateTimestamp`
@@ -147,10 +150,9 @@ namespace _1RM.Model
                 foreach (var additionalSource in _sourceService.AdditionalSources)
                 {
                     // 对于断线的数据源，隔一段时间后尝试重连
-                    if (additionalSource.Value.Status == EnumDbStatus.LostConnection)
+                    if (additionalSource.Value.Status == EnumDatabaseStatus.LostConnection)
                     {
-                        if (additionalSource.Value.StatueTime.AddMinutes(10) < DateTime.Now
-                            && additionalSource.Value.Database_OpenConnection())
+                        if (additionalSource.Value.StatueTime.AddMinutes(10) < DateTime.Now)
                         {
                             additionalSource.Value.Database_SelfCheck();
                         }
@@ -182,6 +184,7 @@ namespace _1RM.Model
             bool ret = false;
             StopTick();
             var needReload = dataSource.NeedRead();
+
             if (dataSource.Database_InsertServer(protocolServer))
             {
                 ret = true;
@@ -191,12 +194,20 @@ namespace _1RM.Model
                     VmItemList.Add(@new);
                     IoC.Get<ServerListPageViewModel>()?.AppendServer(@new); // invoke main list ui change
                     IoC.Get<ServerSelectionsViewModel>()?.AppendServer(@new); // invoke launcher ui change
+
+
+                    if (dataSource != IoC.Get<DataSourceService>().LocalDataSource
+                        && IoC.Get<DataSourceService>().AdditionalSources.Select(x => x.Value.CachedProtocols.Count).Sum() <= 1)
+                    {
+                        // if is additional database and need to set up group by database name!
+                        IoC.Get<ServerListPageViewModel>().ApplySort();
+                    }
                 }
             }
 
             if (needReload)
             {
-                ReloadServerList();
+                ReloadServerList(focus: true);
             }
             else
             {
@@ -216,12 +227,7 @@ namespace _1RM.Model
             var needReload = source?.NeedRead() ?? false;
             if (source == null || source.IsWritable == false) return;
             source.Database_UpdateServer(protocolServer);
-            if (needReload == false)
-            {
-                var old = VmItemList.First(x => x.Id == protocolServer.Id && x.Server.DataSourceName == source.DataSourceName);
-                // invoke main list ui change & invoke launcher ui change
-                old.Server = protocolServer;
-            }
+
 
             if (needReload)
             {
@@ -229,9 +235,14 @@ namespace _1RM.Model
             }
             else
             {
+                // invoke main list ui change & invoke launcher ui change
+                var old = GetItemById(source.DataSourceName, protocolServer.Id);
+                if (old != null)
+                    old.Server = protocolServer;
                 ReadTagsFromServers();
                 IoC.Get<ServerListPageViewModel>().ClearSelection();
             }
+
             StartTick();
         }
 
@@ -253,9 +264,10 @@ namespace _1RM.Model
                         // update viewmodel
                         foreach (var protocolServer in groupedServer)
                         {
-                            var old = VmItemList.First(x => x.Id == protocolServer.Id && x.Server.DataSourceName == source.DataSourceName);
+                            var old = GetItemById(source.DataSourceName, protocolServer.Id);
                             // invoke main list ui change & invoke launcher ui change
-                            old.Server = protocolServer;
+                            if (old != null)
+                                old.Server = protocolServer;
                         }
                     }
                 }
@@ -286,10 +298,13 @@ namespace _1RM.Model
             {
                 if (needReload == false)
                 {
-                    var old = VmItemList.First(x => x.Id == protocolServer.Id && x.Server.DataSourceName == source.DataSourceName);
-                    VmItemList.Remove(old);
-                    IoC.Get<ServerListPageViewModel>()?.VmServerList?.Remove(old); // invoke main list ui change
-                    IoC.Get<ServerSelectionsViewModel>()?.VmServerList?.Remove(old); // invoke launcher ui change
+                    var old = GetItemById(source.DataSourceName, protocolServer.Id);
+                    if (old != null)
+                    {
+                        VmItemList.Remove(old);
+                        IoC.Get<ServerListPageViewModel>()?.VmServerList?.Remove(old); // invoke main list ui change
+                        IoC.Get<ServerSelectionsViewModel>()?.VmServerList?.Remove(old); // invoke launcher ui change
+                    }
                 }
             }
 
@@ -322,10 +337,14 @@ namespace _1RM.Model
                     // update viewmodel
                     foreach (var protocolServer in groupedServer)
                     {
-                        var old = VmItemList.First(x => x.Id == protocolServer.Id && x.Server.DataSourceName == source.DataSourceName);
-                        VmItemList.Remove(old);
-                        IoC.Get<ServerListPageViewModel>()?.VmServerList?.Remove(old); // invoke main list ui change
-                        IoC.Get<ServerSelectionsViewModel>()?.VmServerList?.Remove(old); // invoke launcher ui change
+
+                        var old = GetItemById(source.DataSourceName, protocolServer.Id);
+                        if (old != null)
+                        {
+                            VmItemList.Remove(old);
+                            IoC.Get<ServerListPageViewModel>()?.VmServerList?.Remove(old); // invoke main list ui change
+                            IoC.Get<ServerSelectionsViewModel>()?.VmServerList?.Remove(old); // invoke launcher ui change
+                        }
                     }
                 }
             }

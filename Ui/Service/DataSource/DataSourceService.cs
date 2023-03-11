@@ -67,10 +67,12 @@ namespace _1RM.Service.DataSource
         /// <summary>
         /// init db connection to a sqlite db. Do make sure sqlitePath is writable!.
         /// </summary>
-        public EnumDbStatus InitLocalDataSource(SqliteSource? sqliteConfig = null)
+        public EnumDatabaseStatus InitLocalDataSource(SqliteSource? sqliteConfig = null)
         {
             if (sqliteConfig == null)
             {
+                // sqliteConfig == null means we need init a new local data source.
+                // so read from configs and find where db is.
                 sqliteConfig = IoC.Get<ConfigurationService>().LocalDataSource;
                 if (string.IsNullOrWhiteSpace(sqliteConfig.Path))
                     sqliteConfig.Path = AppPathHelper.Instance.SqliteDbDefaultPath;
@@ -84,7 +86,7 @@ namespace _1RM.Service.DataSource
             if (!IoPermissionHelper.HasWritePermissionOnFile(sqliteConfig.Path))
             {
                 LocalDataSource = null;
-                return EnumDbStatus.AccessDenied;
+                return EnumDatabaseStatus.AccessDenied;
             }
             LocalDataSource = sqliteConfig;
             var ret = LocalDataSource.Database_SelfCheck();
@@ -92,19 +94,12 @@ namespace _1RM.Service.DataSource
             return ret;
         }
 
-        public void AddOrUpdateDataSourceAsync(DataSourceBase config)
-        {
-            Task.Factory.StartNew(() =>
-            {
-                AddOrUpdateDataSource(config);
-            });
-        }
 
-
-        public EnumDbStatus AddOrUpdateDataSource(DataSourceBase config, int connectTimeOutSeconds = 5)
+        public EnumDatabaseStatus AddOrUpdateDataSource(DataSourceBase config, int connectTimeOutSeconds = 5, bool doReload = true)
         {
             try
             {
+                config.MarkToNeedRead(); // reload database
                 if (config is SqliteSource { DataSourceName: LOCAL_DATA_SOURCE_NAME } localConfig)
                 {
                     return InitLocalDataSource(localConfig);
@@ -127,11 +122,12 @@ namespace _1RM.Service.DataSource
             catch (Exception e)
             {
                 SimpleLogHelper.Warning(e);
-                return EnumDbStatus.AccessDenied;
+                return EnumDatabaseStatus.AccessDenied;
             }
             finally
             {
-                IoC.Get<GlobalData>().ReloadServerList(true);
+                if (doReload)
+                    IoC.Get<GlobalData>().ReloadServerList();
             }
         }
 

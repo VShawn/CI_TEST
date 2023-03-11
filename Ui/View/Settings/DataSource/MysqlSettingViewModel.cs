@@ -12,6 +12,7 @@ using _1RM.Service;
 using _1RM.Service.DataSource;
 using _1RM.Service.DataSource.Model;
 using _1RM.Utils;
+using _1RM.View.Utils;
 using Shawn.Utils;
 using Shawn.Utils.Interface;
 using Shawn.Utils.Wpf;
@@ -19,7 +20,7 @@ using Stylet;
 
 namespace _1RM.View.Settings.DataSource
 {
-    public class MysqlSettingViewModel : NotifyPropertyChangedBaseScreen, IMaskLayerContainer
+    public class MysqlSettingViewModel : MaskLayerContainerScreenBase
     {
         private readonly MysqlSource? _orgMysqlConfig = null;
         public MysqlSource New = new MysqlSource();
@@ -39,45 +40,10 @@ namespace _1RM.View.Settings.DataSource
             }
         }
 
-        ~MysqlSettingViewModel()
-        {
-        }
-
-
-        protected override void OnViewLoaded()
-        {
-            MaskLayerController.ProcessingRingInvoke += ShowProcessingRing;
-        }
-
         protected override void OnClose()
         {
-            MaskLayerController.ProcessingRingInvoke -= ShowProcessingRing;
+            base.OnClose();
             New.Database_CloseConnection();
-        }
-
-        private MaskLayer? _topLevelViewModel;
-        public MaskLayer? TopLevelViewModel
-        {
-            get => _topLevelViewModel;
-            set => SetAndNotifyIfChanged(ref _topLevelViewModel, value);
-        }
-
-        public void ShowProcessingRing(long layerId, Visibility visibility, string msg)
-        {
-            Execute.OnUIThread(() =>
-            {
-                if (visibility == Visibility.Visible)
-                {
-                    var pvm = IoC.Get<ProcessingRingViewModel>();
-                    pvm.LayerId = layerId;
-                    pvm.ProcessingRingMessage = msg;
-                    this.TopLevelViewModel = pvm;
-                }
-                else if (this.TopLevelViewModel?.CanDelete(layerId) == true)
-                {
-                    this.TopLevelViewModel = null;
-                }
-            });
         }
 
 
@@ -91,8 +57,8 @@ namespace _1RM.View.Settings.DataSource
                 {
                     if (string.IsNullOrWhiteSpace(_name))
                         throw new ArgumentException(IoC.Get<ILanguageService>().Translate("Can not be empty!"));
-                    if (_dataSourceViewModel.SourceConfigs.Any(x => x != _orgMysqlConfig && string.Equals(x.DataSourceName, _name, StringComparison.CurrentCultureIgnoreCase)))
-                        throw new ArgumentException(IoC.Get<ILanguageService>().Translate("{0} is existed!", _name));
+                    if (_dataSourceViewModel.SourceConfigs.Any(x => x != _orgMysqlConfig && string.Equals(x.DataSourceName.Trim(), _name.Trim(), StringComparison.CurrentCultureIgnoreCase)))
+                        throw new ArgumentException(IoC.Get<ILanguageService>().Translate("XXX is already existed!", _name));
                 }
             }
         }
@@ -217,15 +183,15 @@ namespace _1RM.View.Settings.DataSource
                 {
                     Task.Factory.StartNew(() =>
                     {
-                        var id = MaskLayerController.ShowProcessingRingMainWindow();
+                        MaskLayerController.ShowProcessingRing(assignLayerContainer: this);
                         try
                         {
                             var config = new MysqlSource()
                             {
-                                DataSourceName = Name,
-                                Host = Host,
+                                DataSourceName = Name.Trim(),
+                                Host = Host.Trim(),
                                 Port = int.Parse(_port),
-                                DatabaseName = DatabaseName,
+                                DatabaseName = DatabaseName.Trim(),
                                 UserName = UserName,
                                 Password = Password
                             };
@@ -244,7 +210,7 @@ namespace _1RM.View.Settings.DataSource
                         }
                         finally
                         {
-                            MaskLayerController.HideProcessingRing(id);
+                            MaskLayerController.HideMask(this);
                         }
                     });
                 });

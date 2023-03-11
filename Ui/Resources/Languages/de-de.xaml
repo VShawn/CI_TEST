@@ -68,6 +68,7 @@
     <s:String x:Key="All">Alle</s:String>
     <s:String x:Key="Protocol">Protokoll</s:String>
     <s:String x:Key="Cameras">Cameras</s:String>
+    <s:String x:Key="Upload">Hochladen</s:String>
     <s:String x:Key="filter_mainwindow">Schlüsselwörter oder '#' + Tag-Name</s:String>
     <s:String x:Key="Search (Ctrl+F)">Suche (STRG + F)</s:String>
     <s:String x:Key="hotkey_already_registered">Hotkey bereits registriert</s:String>
@@ -248,4 +249,18 @@
     <s:String x:Key="Please select a Data Source">Please select a Data Source</s:String>
     <s:String x:Key="Test connection">Test connection</s:String>
     <s:String x:Key="Show XXX button">Show `{0}` button</s:String>
+    <s:String x:Key="Show recently used here">Kürzlich verwendete hier anzeigen</s:String>
+    <s:String x:Key="Hide recently used">Zuletzt verwendete ausblenden</s:String>
+    <s:String x:Key="Leave blank to inherit the default value">Lassen Sie das Feld leer, um den Standardwert zu übernehmen</s:String>
+    <s:String x:Key="Alternative">Alternative</s:String>
+    <s:String x:Key="with alternative">mit Alternative</s:String>
+    <s:String x:Key="Automatic address switching">Automatische Adressumschaltung</s:String>
+    <s:String x:Key="When the default host or port is unavailable the alternate addresses will be tried in sequence">Wenn der Standardhost oder -port nicht verfügbar ist, werden die alternativen Adressen nacheinander ausprobiert</s:String>
+    <s:String x:Key="support multi-address multi-account">support multi-address multi-account</s:String>
+    <s:String x:Key="Detecting your alternate host...">Detecting your alternate host...</s:String>
+    <s:String x:Key="XXX is already existed!">`{0}` is already existed!</s:String>
+    <s:String x:Key="XXX is not existed!">`{0}` is not existed!</s:String>
+    <s:String x:Key="Show credentials info">Informationen zu Anmeldeinformationen anzeigen</s:String>
+    <s:String x:Key="Sorting">Sortierung</s:String>
+    <s:String x:Key="Sort by drag">Sortieren nach Ziehen</s:String>
 </ResourceDictionary>

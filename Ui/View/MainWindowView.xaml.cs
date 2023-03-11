@@ -1,20 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Interop;
-using _1RM.Model;
-using _1RM.Resources.Icons;
 using _1RM.Service;
 using _1RM.Utils;
-using _1RM.View.Host.ProtocolHosts;
+using _1RM.View.Utils;
 using Shawn.Utils;
-using Shawn.Utils.Interface;
 using Shawn.Utils.Wpf;
 using Shawn.Utils.WpfResources.Theme.Styles;
-using Stylet;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using TextBox = System.Windows.Controls.TextBox;
 
@@ -32,7 +25,7 @@ namespace _1RM.View
             Vm = vm;
             _configurationService = configurationService;
             this.DataContext = Vm;
-            Title = AppPathHelper.APP_DISPLAY_NAME;
+            Title = Assert.APP_DISPLAY_NAME;
             // restore the window size from 
             this.Width = localityService.MainWindowWidth;
             this.Height = localityService.MainWindowHeight;
@@ -71,7 +64,7 @@ namespace _1RM.View
                    )
                 {
                     // 显示“请求应用的评分和评价”页面 https://docs.microsoft.com/zh-cn/windows/uwp/monetize/request-ratings-and-reviews
-                    Vm.TopLevelViewModel = IoC.Get<RequestRatingViewModel>();
+                    MaskLayerController.ShowMask(IoC.Get<RequestRatingViewModel>(), Vm);
                     return;
                 }
                 vm.HideMe();
@@ -79,26 +72,29 @@ namespace _1RM.View
                 App.Close();
 #endif
             };
-            this.Closing += (sender, args) =>
-            {
-                if (this.ShowInTaskbar)
-                {
-                    vm.HideMe();
-                    args.Cancel = true;
-                }
-            };
 
             BtnMaximize.Click += (sender, args) => this.WindowState = (this.WindowState == WindowState.Normal) ? WindowState.Maximized : WindowState.Normal;
             BtnMinimize.Click += (sender, args) => { this.WindowState = WindowState.Minimized; };
         }
 
-
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            if (this.ShowInTaskbar)
+            {
+                Vm.HideMe();
+                e.Cancel = true;
+            }
+            else
+            {
+                base.OnClosing(e);
+            }
+        }
 
 
         private void CommandFocusFilter_OnExecuted(object sender, ExecutedRoutedEventArgs e)
         {
             SimpleLogHelper.Debug($"CommandFocusFilter_OnExecuted");
-            if (Vm.IsShownList())
+            if (Vm.IsShownList)
             {
                 if (Vm.ServerListViewModel.TagListViewModel == null)
                 {
@@ -121,11 +117,11 @@ namespace _1RM.View
                 {
                     //SimpleLogHelper.Debug($"Current FocusedElement is " + textBox.Name);
                 }
-                else if (e.Key == Key.Escape && vm.IsShownList() == false)
+                else if (e.Key == Key.Escape && vm.IsShownList == false)
                 {
                     vm.ShowList(false);
                 }
-                else if (e.Key != Key.LeftCtrl && e.Key != Key.RightCtrl && vm.IsShownList())
+                else if (e.Key != Key.LeftCtrl && e.Key != Key.RightCtrl && vm.IsShownList)
                 {
                     if (Vm.ServerListViewModel.TagListViewModel == null)
                     {

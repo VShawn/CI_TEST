@@ -68,6 +68,7 @@
     <s:String x:Key="All">全て</s:String>
     <s:String x:Key="Protocol">プロトコル</s:String>
     <s:String x:Key="Cameras">Cameras</s:String>
+    <s:String x:Key="Upload">アップロード</s:String>
     <s:String x:Key="filter_mainwindow">キーワードまたは「＃」+タグ名</s:String>
     <s:String x:Key="Search (Ctrl+F)">検索（Ctrl + F）</s:String>
     <s:String x:Key="hotkey_already_registered">ホットキーはすでに登録されています</s:String>
@@ -248,4 +249,18 @@
     <s:String x:Key="Please select a Data Source">データソースを選択してください</s:String>
     <s:String x:Key="Test connection">テスト接続</s:String>
     <s:String x:Key="Show XXX button">Show `{0}` button</s:String>
+    <s:String x:Key="Show recently used here">最近使用したものをここに表示</s:String>
+    <s:String x:Key="Hide recently used">最近使用したものを非表示</s:String>
+    <s:String x:Key="Leave blank to inherit the default value">デフォルト値を継承するには空白のままにします</s:String>
+    <s:String x:Key="Alternative">別</s:String>
+    <s:String x:Key="with alternative">代替品あり</s:String>
+    <s:String x:Key="Automatic address switching">自動アドレス切り替え</s:String>
+    <s:String x:Key="When the default host or port is unavailable the alternate addresses will be tried in sequence">デフォルトのホストまたはポートが使用できない場合、代替アドレスが順番に試行されます</s:String>
+    <s:String x:Key="support multi-address multi-account">support multi-address multi-account</s:String>
+    <s:String x:Key="Detecting your alternate host...">Detecting your alternate host...</s:String>
+    <s:String x:Key="XXX is already existed!">`{0}` is already existed!</s:String>
+    <s:String x:Key="XXX is not existed!">`{0}` is not existed!</s:String>
+    <s:String x:Key="Show credentials info">資格情報を表示</s:String>
+    <s:String x:Key="Sorting">並べ替え</s:String>
+    <s:String x:Key="Sort by drag">ドラッグで並べ替え</s:String>
 </ResourceDictionary>

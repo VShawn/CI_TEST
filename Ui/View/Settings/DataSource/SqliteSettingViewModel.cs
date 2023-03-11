@@ -15,6 +15,7 @@ using _1RM.Service;
 using _1RM.Service.DataSource;
 using _1RM.Service.DataSource.Model;
 using _1RM.Utils;
+using _1RM.View.Utils;
 using com.github.xiangyuecn.rsacsharp;
 using Shawn.Utils;
 using Shawn.Utils.Interface;
@@ -24,7 +25,7 @@ using Stylet;
 
 namespace _1RM.View.Settings.DataSource
 {
-    public class SqliteSettingViewModel : NotifyPropertyChangedBaseScreen, IMaskLayerContainer
+    public class SqliteSettingViewModel : MaskLayerContainerScreenBase
     {
         public SqliteSource? OrgSqliteConfig { get; } = null;
 
@@ -50,50 +51,17 @@ namespace _1RM.View.Settings.DataSource
                 OrgSqliteConfig?.Database_CloseConnection();
             }
         }
-        ~SqliteSettingViewModel()
-        {
-        }
-
-        protected override void OnViewLoaded()
-        {
-            MaskLayerController.ProcessingRingInvoke += ShowProcessingRing;
-        }
 
         protected override void OnClose()
         {
-            MaskLayerController.ProcessingRingInvoke -= ShowProcessingRing;
+            base.OnClose();
             New.Database_CloseConnection();
-        }
-
-        private MaskLayer? _topLevelViewModel;
-        public MaskLayer? TopLevelViewModel
-        {
-            get => _topLevelViewModel;
-            set => SetAndNotifyIfChanged(ref _topLevelViewModel, value);
-        }
-
-        public void ShowProcessingRing(long layerId, Visibility visibility, string msg)
-        {
-            Execute.OnUIThread(() =>
-            {
-                if (visibility == Visibility.Visible)
-                {
-                    var pvm = IoC.Get<ProcessingRingViewModel>();
-                    pvm.LayerId = layerId;
-                    pvm.ProcessingRingMessage = msg;
-                    this.TopLevelViewModel = pvm;
-                }
-                else if (this.TopLevelViewModel?.CanDelete(layerId) == true)
-                {
-                    this.TopLevelViewModel = null;
-                }
-            });
         }
 
         private bool ValidateDbStatusAndShowMessageBox(bool showAlert = true)
         {
             var res = New.Database_SelfCheck();
-            if (res == EnumDbStatus.OK)
+            if (res == EnumDatabaseStatus.OK)
             {
                 return true;
             }
@@ -115,8 +83,8 @@ namespace _1RM.View.Settings.DataSource
                     New.DataSourceName = value;
                     if (string.IsNullOrWhiteSpace(_name))
                         throw new ArgumentException(IoC.Get<ILanguageService>().Translate("Can not be empty!"));
-                    if (_dataSourceViewModel.SourceConfigs.Any(x => x != OrgSqliteConfig && string.Equals(x.DataSourceName, _name, StringComparison.CurrentCultureIgnoreCase)))
-                        throw new ArgumentException(IoC.Get<ILanguageService>().Translate("{0} is existed!", _name));
+                    if (_dataSourceViewModel.SourceConfigs.Any(x => x != OrgSqliteConfig && string.Equals(x.DataSourceName.Trim(), _name, StringComparison.CurrentCultureIgnoreCase)))
+                        throw new ArgumentException(IoC.Get<ILanguageService>().Translate("XXX is already existed!", _name));
                 }
             }
         }

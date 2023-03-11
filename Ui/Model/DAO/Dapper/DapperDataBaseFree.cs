@@ -8,7 +8,7 @@ namespace _1RM.Model.DAO.Dapper
     /// <summary>
     /// DapperDb no occupation version
     /// </summary>
-    public sealed class DapperDataBaseFree : DapperDataBase
+    public sealed class DapperDatabaseFree : DapperDatabase
     {
         /// <inheritdoc />
         public override void InitTables()
@@ -151,15 +151,6 @@ namespace _1RM.Model.DAO.Dapper
                 CloseConnection();
                 return ret;
             }
-        }
-
-        /// <inheritdoc />
-        public override bool SetConfigRsa(string privateKeyPath, string publicKey, IEnumerable<ProtocolBase> servers)
-        {
-            OpenConnection();
-            var ret = base.SetConfigRsa(privateKeyPath, publicKey, servers);
-            CloseConnection();
-            return ret;
         }
 
 

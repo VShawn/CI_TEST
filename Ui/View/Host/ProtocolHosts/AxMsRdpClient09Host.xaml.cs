@@ -9,6 +9,7 @@ using MSTSCLib;
 using _1RM.Model;
 using _1RM.Model.Protocol;
 using _1RM.Service;
+using _1RM.Utils;
 using Shawn.Utils;
 using Shawn.Utils.Wpf;
 using Shawn.Utils.WpfResources.Theme.Styles;
@@ -66,7 +67,17 @@ namespace _1RM.View.Host.ProtocolHosts
         private int _retryCount = 0;
         private const int MaxRetryCount = 20;
 
-        public AxMsRdpClient09Host(RDP rdp, int width = 0, int height = 0) : base(rdp, true)
+        public static AxMsRdpClient09Host Create(RDP rdp, int width = 0, int height = 0)
+        {
+            AxMsRdpClient09Host? view = null;
+            Execute.OnUIThreadSync(() =>
+            {
+                view = new AxMsRdpClient09Host(rdp, width, height);
+            });
+            return view!;
+        }
+
+        private AxMsRdpClient09Host(RDP rdp, int width = 0, int height = 0) : base(rdp, true)
         {
             InitializeComponent();
 
@@ -74,7 +85,6 @@ namespace _1RM.View.Host.ProtocolHosts
             GridLoading.Visibility = Visibility.Visible;
 
             _rdpSettings = rdp;
-            _rdpSettings.DecryptToConnectLevel();
             InitRdp(width, height);
             GlobalEventHelper.OnScreenResolutionChanged += OnScreenResolutionChanged;
         }
@@ -111,7 +121,7 @@ namespace _1RM.View.Host.ProtocolHosts
         private void RdpInitServerInfo()
         {
             #region server info
-            Debug.Assert(_rdpClient != null);
+            Debug.Assert(_rdpClient != null); if (_rdpClient == null) return;
             // server connection info: user name\ psw \ port ...
             _rdpClient.Server = _rdpSettings.Address;
             _rdpClient.Domain = _rdpSettings.Domain;
@@ -132,7 +142,7 @@ namespace _1RM.View.Host.ProtocolHosts
 
 
             var secured = (MSTSCLib.IMsTscNonScriptable)_rdpClient.GetOcx();
-            secured.ClearTextPassword = DataService.DecryptOrReturnOriginalString(_rdpSettings.Password);
+            secured.ClearTextPassword = UnSafeStringEncipher.DecryptOrReturnOriginalString(_rdpSettings.Password);
             _rdpClient.FullScreenTitle = _rdpSettings.DisplayName + " - " + _rdpSettings.SubTitle;
 
             #endregion server info
@@ -140,7 +150,7 @@ namespace _1RM.View.Host.ProtocolHosts
 
         private void RdpInitStatic()
         {
-            Debug.Assert(_rdpClient != null);
+            Debug.Assert(_rdpClient != null); if (_rdpClient == null) return;
             SimpleLogHelper.Debug("RDP Host: init Static");
             // enable CredSSP, will use CredSsp if the client supports.
             _rdpClient.AdvancedSettings7.EnableCredSspSupport = true;
@@ -217,7 +227,7 @@ namespace _1RM.View.Host.ProtocolHosts
 
         private void RdpInitConnBar()
         {
-            Debug.Assert(_rdpClient != null);
+            Debug.Assert(_rdpClient != null); if (_rdpClient == null) return;
             SimpleLogHelper.Debug("RDP Host: init conn bar");
             _rdpClient.AdvancedSettings6.DisplayConnectionBar = _rdpSettings.IsFullScreenWithConnectionBar == true;
             _rdpClient.AdvancedSettings6.ConnectionBarShowPinButton = true;
@@ -248,7 +258,7 @@ namespace _1RM.View.Host.ProtocolHosts
 
         private void RdpInitRedirect()
         {
-            Debug.Assert(_rdpClient != null);
+            Debug.Assert(_rdpClient != null); if (_rdpClient == null) return;
             SimpleLogHelper.Debug("RDP Host: init Redirect");
 
 
@@ -333,7 +343,7 @@ namespace _1RM.View.Host.ProtocolHosts
         public void RedirectDevice()
         {
             var ocx = _rdpClient?.GetOcx() as MSTSCLib.IMsRdpClientNonScriptable7;
-            if(ocx == null)
+            if (ocx == null)
                 return;
             ocx.CameraRedirConfigCollection.RedirectByDefault = false;
             if (_rdpSettings.EnableRedirectCameras == true)
@@ -360,7 +370,7 @@ namespace _1RM.View.Host.ProtocolHosts
 
         private void RdpInitDisplay(int width = 0, int height = 0, bool isReconnecting = false)
         {
-            Debug.Assert(_rdpClient != null);
+            Debug.Assert(_rdpClient != null); if (_rdpClient == null) return;
             #region Display
 
             _primaryScaleFactor = ScreenInfoEx.GetPrimaryScreenScaleFactor();
@@ -416,7 +426,7 @@ namespace _1RM.View.Host.ProtocolHosts
                         else
                         {
                             // if isReconnecting == false, then width is Tab width, true width = Tab width * ScaleFactor
-                            if (_rdpSettings.ThisTimeConnWithFullScreen())
+                            if (_rdpSettings.IsThisTimeConnWithFullScreen())
                             {
                                 var size = GetScreenSizeIfRdpIsFullScreen();
                                 _rdpClient.DesktopWidth = size.Width;
@@ -462,7 +472,7 @@ namespace _1RM.View.Host.ProtocolHosts
 
         private void RdpInitPerformance()
         {
-            Debug.Assert(_rdpClient != null);
+            Debug.Assert(_rdpClient != null); if (_rdpClient == null) return;
             SimpleLogHelper.Debug("RDP Host: init Performance");
 
             #region Performance
@@ -522,7 +532,7 @@ namespace _1RM.View.Host.ProtocolHosts
 
         private void RdpInitGateway()
         {
-            Debug.Assert(_rdpClient != null);
+            Debug.Assert(_rdpClient != null); if (_rdpClient == null) return;
             SimpleLogHelper.Debug("RDP Host: init Gateway");
 
             #region Gateway
@@ -609,25 +619,29 @@ namespace _1RM.View.Host.ProtocolHosts
 
         public override void Conn()
         {
-            Debug.Assert(_rdpClient != null);
-            try
+            Debug.Assert(_rdpClient != null); if (_rdpClient == null) return;
+            Dispatcher.Invoke(() =>
             {
-                if (Status == ProtocolHostStatus.Connected || Status == ProtocolHostStatus.Connecting)
+                try
                 {
-                    return;
+                    if (Status == ProtocolHostStatus.Connected || Status == ProtocolHostStatus.Connecting)
+                    {
+                        return;
+                    }
+
+                    Status = ProtocolHostStatus.Connecting;
+                    GridLoading.Visibility = Visibility.Visible;
+                    RdpHost.Visibility = Visibility.Collapsed;
+                    _rdpClient.Connect();
                 }
-                Status = ProtocolHostStatus.Connecting;
-                GridLoading.Visibility = Visibility.Visible;
-                RdpHost.Visibility = Visibility.Collapsed;
-                _rdpClient.Connect();
-            }
-            catch (Exception e)
-            {
-                Status = ProtocolHostStatus.Connected;
-                GridMessageBox.Visibility = Visibility.Visible;
-                TbMessageTitle.Visibility = Visibility.Collapsed;
-                TbMessage.Text = e.Message;
-            }
+                catch (Exception e)
+                {
+                    Status = ProtocolHostStatus.Connected;
+                    GridMessageBox.Visibility = Visibility.Visible;
+                    TbMessageTitle.Visibility = Visibility.Collapsed;
+                    TbMessage.Text = e.Message;
+                }
+            });
         }
 
         public override void Close()
@@ -644,7 +658,7 @@ namespace _1RM.View.Host.ProtocolHosts
             {
                 return;
             }
-            Debug.Assert(_rdpClient != null);
+            Debug.Assert(_rdpClient != null); if (_rdpClient == null) return;
             _rdpClient.FullScreen = true; // this will invoke OnRequestGoFullScreen -> MakeNormal2FullScreen
         }
 

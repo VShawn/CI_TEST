@@ -2,15 +2,14 @@
 using System.Windows;
 using System.Windows.Threading;
 using _1RM.Model;
-using _1RM.Model.DAO;
-using _1RM.Model.DAO.Dapper;
 using _1RM.Service;
 using _1RM.Service.DataSource;
+using _1RM.Utils;
 using _1RM.View;
-using _1RM.View.Editor;
 using _1RM.View.ErrorReport;
 using _1RM.View.Launcher;
 using _1RM.View.Settings;
+using _1RM.View.Utils;
 using Shawn.Utils;
 using Shawn.Utils.Interface;
 using Shawn.Utils.Wpf;
@@ -33,9 +32,9 @@ namespace _1RM
 
         #region OnlyOneAppInstanceCheck
 #if FOR_MICROSOFT_STORE_ONLY
-        private readonly NamedPipeHelper _namedPipeHelper = new NamedPipeHelper(AppPathHelper.APP_NAME + "_Store_" + MD5Helper.GetMd5Hash16BitString(Environment.CurrentDirectory + Environment.UserName));
+        private readonly NamedPipeHelper _namedPipeHelper = new NamedPipeHelper(Assert.APP_NAME + "_Store_" + MD5Helper.GetMd5Hash16BitString(Environment.CurrentDirectory + Environment.UserName));
 #else
-        private readonly NamedPipeHelper _namedPipeHelper = new NamedPipeHelper(AppPathHelper.APP_NAME + "_" + MD5Helper.GetMd5Hash16BitString(Environment.CurrentDirectory + Environment.UserName));
+        private readonly NamedPipeHelper _namedPipeHelper = new NamedPipeHelper(Assert.APP_NAME + "_" + MD5Helper.GetMd5Hash16BitString(Environment.CurrentDirectory + Environment.UserName));
 #endif
         public void OnlyOneAppInstanceCheck()
         {
@@ -100,8 +99,6 @@ namespace _1RM
             builder.Bind<SettingsPageViewModel>().ToSelf().InSingletonScope();
             builder.Bind<ServerListPageViewModel>().ToSelf().InSingletonScope();
             builder.Bind<ProcessingRingViewModel>().ToSelf().InSingletonScope();
-            builder.Bind<RequestRatingViewModel>().ToSelf();
-            builder.Bind<ServerEditorPageViewModel>().ToSelf();
             builder.Bind<SessionControlService>().ToSelf().InSingletonScope();
 
             builder.Bind<IMessageBoxViewModel>().To<MessageBoxViewModel>();
@@ -127,6 +124,13 @@ namespace _1RM
 
         protected override void OnLaunch()
         {
+#if FOR_MICROSOFT_STORE_ONLY
+            MsAppCenterHelper.TraceAppStatus(true, true);
+            MsAppCenterHelper.TraceSpecial("Distributor", $"{Assert.APP_NAME} MS Store");
+#else
+            MsAppCenterHelper.TraceAppStatus(true, false);
+            MsAppCenterHelper.TraceSpecial("Distributor", $"{Assert.APP_NAME} Exe");
+#endif
             // Step4
             // This is called just after the root ViewModel has been launched
             // Something like a version check that displays a dialog might be launched from here
@@ -134,6 +138,7 @@ namespace _1RM
 
             // init Database here after ui init, to show alert if db connection goes wrong.
             _appInit.InitOnLaunch();
+            IoC.Get<TaskTrayService>().TaskTrayInit();
         }
 
 
@@ -157,11 +162,7 @@ namespace _1RM
                     SimpleLogHelper.Fatal(e.Exception);
                     var errorReport = new ErrorReportWindow(e.Exception);
                     errorReport.ShowDialog();
-#if FOR_MICROSOFT_STORE_ONLY
-                    throw e.Exception;
-#else
                     App.Close(100);
-#endif
                 }
             e.Handled = true;
         }

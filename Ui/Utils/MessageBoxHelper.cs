@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
 using _1RM.View;
+using _1RM.View.Utils;
 using Shawn.Utils.Interface;
 using Stylet;
 using Screen = Stylet.Screen;
@@ -36,18 +37,18 @@ namespace _1RM.Utils
             }
             else
             {
-                IMaskLayerContainer? layerContainer;
-                if (ownerViewModel == null)
+                IMaskLayerContainer? layerContainer = null;
+                if (ownerViewModel is IMaskLayerContainer mlc)
+                {
+                    layerContainer = mlc;
+                }
+                else if (ownerViewModel == null)
                 {
                     layerContainer = mainWindowViewModel;
                 }
-                else
-                {
-                    layerContainer = ownerViewModel as IMaskLayerContainer;
-                }
                 long layerId = 0;
                 if (layerContainer != null)
-                    layerId = MaskLayerController.ShowProcessingRing(layerContainer: layerContainer);
+                    layerId = MaskLayerController.ShowProcessingRing(assignLayerContainer: layerContainer);
                 var vm = IoC.Get<IMessageBoxViewModel>();
                 vm.Setup(messageBoxText: content,
                     caption: title,
@@ -62,10 +63,10 @@ namespace _1RM.Utils
                 {
                     screen.Activated += MessageBoxOnActivated;
                 }
-                IoC.Get<IWindowManager>().ShowDialog(vm, ownerViewModel != null ? ownerViewAware : mainWindowViewModel);
+                IoC.Get<IWindowManager>().ShowDialog(vm, ownerViewAware ?? mainWindowViewModel);
                 var ret = MessageBoxResult.Yes == vm.ClickedButton;
                 if (layerContainer != null)
-                    MaskLayerController.HideProcessingRing(layerId, layerContainer: layerContainer);
+                    MaskLayerController.HideMask(layerId, layerContainer);
                 return ret;
             }
         }
@@ -136,18 +137,18 @@ namespace _1RM.Utils
                 }
                 else
                 {
-                    IMaskLayerContainer? layerContainer;
-                    if (ownerViewModel == null)
+                    IMaskLayerContainer? layerContainer = null;
+                    if (ownerViewModel is IMaskLayerContainer mlc)
+                    {
+                        layerContainer = mlc;
+                    }
+                    else if (ownerViewModel == null)
                     {
                         layerContainer = mainWindowViewModel;
                     }
-                    else
-                    {
-                        layerContainer = ownerViewModel as IMaskLayerContainer;
-                    }
                     long layerId = 0;
                     if (layerContainer != null)
-                        layerId = MaskLayerController.ShowProcessingRing(layerContainer: layerContainer);
+                        layerId = MaskLayerController.ShowProcessingRing(assignLayerContainer: layerContainer);
                     var vm = IoC.Get<IMessageBoxViewModel>();
                     vm.Setup(messageBoxText: content,
                         caption: title,
@@ -182,9 +183,9 @@ namespace _1RM.Utils
                             }
                         };
                     }
-                    IoC.Get<IWindowManager>().ShowDialog(vm, ownerViewModel != null ? ownerViewAware : mainWindowViewModel);
+                    IoC.Get<IWindowManager>().ShowDialog(vm, ownerViewAware ?? mainWindowViewModel);
                     if (layerContainer != null)
-                        MaskLayerController.HideProcessingRing(layerId, layerContainer: layerContainer);
+                        MaskLayerController.HideMask(layerId, layerContainer: layerContainer);
                 }
             });
         }

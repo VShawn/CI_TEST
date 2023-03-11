@@ -6,24 +6,22 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using System.Windows;
-using _1RM.Controls;
 using _1RM.Model;
 using _1RM.Model.Protocol;
 using _1RM.Model.Protocol.Base;
-using _1RM.Model.ProtocolRunner;
 using _1RM.Service;
-using _1RM.Service.DataSource;
 using _1RM.Service.DataSource.Model;
 using _1RM.Utils;
 using _1RM.View.Editor.Forms;
-using _1RM.View.ServerList;
+using _1RM.View.Editor.Forms.AlternativeCredential;
+using _1RM.View.Utils;
 using CredentialManagement;
 using Shawn.Utils;
 using Shawn.Utils.Interface;
 using Shawn.Utils.Wpf;
 using Shawn.Utils.Wpf.FileSystem;
-using Credential = CredentialManagement.Credential;
+using Stylet;
+using Credential = _1RM.Model.Protocol.Base.Credential;
 
 namespace _1RM.View.Editor
 {
@@ -112,6 +110,7 @@ namespace _1RM.View.Editor
         /// </summary>
         private readonly Type? _sharedTypeInBuckEdit = null;
         private readonly List<string> _sharedTagsInBuckEdit = new List<string>();
+        private readonly List<Credential> _sharedCredentialsInBuckEdit = new List<Credential>();
 
         private ServerEditorPageViewModel(GlobalData globalData, IEnumerable<ProtocolBase> servers)
         {
@@ -179,7 +178,7 @@ namespace _1RM.View.Editor
             // tags
             {
                 _sharedTagsInBuckEdit = new List<string>(); // remember the common tags
-                bool isAllTagsSameFlag = true;
+                bool isAllTheSameFlag = true;
                 for (var i = 0; i < serverBases.Length; i++)
                 {
                     foreach (var tagName in serverBases[i].Tags)
@@ -190,22 +189,51 @@ namespace _1RM.View.Editor
                         }
                         else
                         {
-                            isAllTagsSameFlag = false;
+                            isAllTheSameFlag = false;
                         }
                     }
                 }
 
-                var tags = new List<string>();
-                if (isAllTagsSameFlag == false)
-                    tags.Add(Server.ServerEditorDifferentOptions);
-                tags.AddRange(_sharedTagsInBuckEdit);
-                Server.Tags = tags;
+                var list = new List<string>();
+                if (isAllTheSameFlag == false)
+                    list.Add(Server.ServerEditorDifferentOptions);
+                list.AddRange(_sharedTagsInBuckEdit);
+                Server.Tags = list;
+            }
+
+
+            // alternate credentials
+            if (Server is ProtocolBaseWithAddressPort protocol
+                && (_sharedTypeInBuckEdit.IsSubclassOf(typeof(ProtocolBaseWithAddressPort)) || _sharedTypeInBuckEdit == typeof(ProtocolBaseWithAddressPort)))
+            {
+                var ss = servers.Select(x => (ProtocolBaseWithAddressPort)x).ToArray();
+                bool isAllTheSameFlag = true;
+                foreach (var s in ss)
+                {
+                    foreach (var c in s.AlternateCredentials)
+                    {
+                        if (ss.All(x => x.AlternateCredentials.Any(y => y.IsValueEqualTo(c) == true)))
+                        {
+                            if (_sharedCredentialsInBuckEdit.All(x => x.IsValueEqualTo(c) == false))
+                            {
+                                _sharedCredentialsInBuckEdit.Add(c);
+                            }
+                        }
+                        else
+                        {
+                            isAllTheSameFlag = false;
+                        }
+                    }
+                }
+
+                var list = new List<Credential>();
+                if (isAllTheSameFlag == false)
+                    list.Add(new Credential(isEditable: false) { Name = Server.ServerEditorDifferentOptions });
+                list.AddRange(_sharedCredentialsInBuckEdit);
+                protocol.AlternateCredentials = new ObservableCollection<Credential>(list);
             }
 
             _orgServer = Server.Clone();
-
-            Debug.Assert(IsBuckEdit == true);
-            Debug.Assert(_sharedTypeInBuckEdit != null);
 
             // init ui
             if (_serversInBuckEdit.All(x => x.GetType() == _sharedTypeInBuckEdit))
@@ -280,8 +308,8 @@ namespace _1RM.View.Editor
                     // bulk edit
                     if (IsBuckEdit == true)
                     {
-                        Debug.Assert(_sharedTypeInBuckEdit != null);
-                        Debug.Assert(_serversInBuckEdit != null);
+                        if (_sharedTypeInBuckEdit == null) throw new NullReferenceException($"{nameof(_sharedTypeInBuckEdit)} should not be null!");
+                        if (_serversInBuckEdit == null) throw new NullReferenceException($"{nameof(_serversInBuckEdit)} should not be null!");
                         // copy the same value properties
                         var properties = _sharedTypeInBuckEdit.GetProperties(BindingFlags.Public | BindingFlags.Instance);
                         foreach (var property in properties)
@@ -289,7 +317,8 @@ namespace _1RM.View.Editor
                             if (property.SetMethod?.IsPublic == true
                                 && property.SetMethod.IsAbstract == false
                                 && property.Name != nameof(ProtocolBase.Id)
-                                && property.Name != nameof(ProtocolBase.Tags))
+                                && property.Name != nameof(ProtocolBase.Tags)
+                                && property.Name != nameof(ProtocolBaseWithAddressPortUserPwd.AlternateCredentials))
                             {
                                 var obj = property.GetValue(Server);
                                 if (obj == null)
@@ -313,13 +342,11 @@ namespace _1RM.View.Editor
                             {
                                 if (_sharedTagsInBuckEdit.Contains(tag) == true)
                                 {
-                                    // remove tag if it is in common and not in Server.Tags
                                     if (Server.Tags.Contains(tag) == false)
                                         server.Tags.Remove(tag);
                                 }
                                 else
                                 {
-                                    // remove tag if it is in not common and ServerEditorDifferentOptions is not existed
                                     if (Server.Tags.Contains(Server.ServerEditorDifferentOptions) == false)
                                         server.Tags.Remove(tag);
                                 }
@@ -331,6 +358,38 @@ namespace _1RM.View.Editor
                                 server.Tags.Add(tag);
                             }
                             server.Tags = server.Tags.Distinct().ToList();
+
+
+                            // merge credentials
+                            if (server is ProtocolBaseWithAddressPort protocol
+                                && Server is ProtocolBaseWithAddressPort newServer)
+                            {
+                                foreach (var credential in protocol.AlternateCredentials.ToArray())
+                                {
+                                    if (_sharedCredentialsInBuckEdit.Any(x => x.IsValueEqualTo(credential)))
+                                    {
+                                        if (newServer.AlternateCredentials.All(x => x.IsValueEqualTo(credential) == false))
+                                        {
+                                            protocol.AlternateCredentials.Remove(credential);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (newServer.AlternateCredentials.All(x => x.Name != Server.ServerEditorDifferentOptions && x.IsEditable != false))
+                                        {
+                                            protocol.AlternateCredentials.Remove(credential);
+                                        }
+                                    }
+                                }
+
+                                foreach (var credential in newServer.AlternateCredentials.Where(x => x.Name != Server.ServerEditorDifferentOptions))
+                                {
+                                    if (protocol.AlternateCredentials.All(x => x.IsValueEqualTo(credential) == false))
+                                    {
+                                        protocol.AlternateCredentials.Add(credential);
+                                    }
+                                }
+                            }
                         }
 
                         // save
@@ -340,11 +399,13 @@ namespace _1RM.View.Editor
                     else if (IsAddMode == false
                              && Server.IsTmpSession() == false)
                     {
+                        MsAppCenterHelper.TraceSessionEdit(Server.Protocol);
                         _globalData.UpdateServer(Server);
                     }
                     // add
                     else if (IsAddMode && _addToDataSource != null)
                     {
+                        MsAppCenterHelper.TraceSessionEdit(Server.Protocol);
                         _globalData.AddServer(Server, _addToDataSource);
                     }
 
@@ -353,7 +414,7 @@ namespace _1RM.View.Editor
                         try
                         {
                             // try read user name & password from CredentialManagement.
-                            using var cred = new Credential()
+                            using var cred = new CredentialManagement.Credential()
                             {
                                 Target = "TERMSRV/" + rdp.Address,
                                 Type = CredentialType.Generic,
@@ -396,7 +457,6 @@ namespace _1RM.View.Editor
 
         private void UpdateServerWhenProtocolChanged(Type newProtocolType)
         {
-            Debug.Assert(newProtocolType?.FullName != null);
             // change protocol
             var protocolServerBaseAssembly = typeof(ProtocolBase).Assembly;
             var server = (ProtocolBase)protocolServerBaseAssembly.CreateInstance(newProtocolType.FullName)!;
@@ -466,62 +526,63 @@ namespace _1RM.View.Editor
         /// <param name="protocolType"></param>
         private void ReflectProtocolEditControl(Type protocolType)
         {
-            Debug.Assert(protocolType?.FullName != null);
-
-            try
+            Execute.OnUIThreadSync(() =>
             {
-                if (protocolType == typeof(RDP))
+                try
                 {
-                    ProtocolEditControl = new RdpForm(Server);
+                    if (protocolType == typeof(RDP))
+                    {
+                        ProtocolEditControl = new RdpForm(Server, isBuckEdit: IsBuckEdit);
+                    }
+                    else if (protocolType == typeof(RdpApp))
+                    {
+                        ProtocolEditControl = new RdpAppForm(Server);
+                    }
+                    else if (protocolType == typeof(SSH))
+                    {
+                        ProtocolEditControl = new SshForm(Server);
+                    }
+                    else if (protocolType == typeof(Telnet))
+                    {
+                        ProtocolEditControl = new TelnetForm(Server);
+                    }
+                    else if (protocolType == typeof(FTP))
+                    {
+                        ProtocolEditControl = new FTPForm(Server);
+                    }
+                    else if (protocolType == typeof(SFTP))
+                    {
+                        ProtocolEditControl = new SftpForm(Server);
+                    }
+                    else if (protocolType == typeof(VNC))
+                    {
+                        ProtocolEditControl = new VncForm(Server);
+                    }
+                    else if (protocolType == typeof(LocalApp))
+                    {
+                        ProtocolEditControl = new AppForm(Server);
+                    }
+                    else if (protocolType == typeof(ProtocolBaseWithAddressPortUserPwd))
+                    {
+                        ProtocolEditControl = new BaseFormWithAddressPortUserPwd(Server);
+                    }
+                    else if (protocolType == typeof(ProtocolBaseWithAddressPort))
+                    {
+                        ProtocolEditControl = new BaseFormWithAddressPort(Server);
+                    }
+                    else if (protocolType == typeof(ProtocolBase))
+                    {
+                        ProtocolEditControl = null;
+                    }
+                    else
+                        throw new NotImplementedException($"can not find from for '{protocolType.Name}' in {nameof(ServerEditorPageViewModel)}");
                 }
-                else if (protocolType == typeof(RdpApp))
+                catch (Exception e)
                 {
-                    ProtocolEditControl = new RdpAppForm(Server);
+                    SimpleLogHelper.Error(e);
+                    throw;
                 }
-                else if (protocolType == typeof(SSH))
-                {
-                    ProtocolEditControl = new SshForm(Server);
-                }
-                else if (protocolType == typeof(Telnet))
-                {
-                    ProtocolEditControl = new TelnetForm(Server);
-                }
-                else if (protocolType == typeof(FTP))
-                {
-                    ProtocolEditControl = new FTPForm(Server);
-                }
-                else if (protocolType == typeof(SFTP))
-                {
-                    ProtocolEditControl = new SftpForm(Server);
-                }
-                else if (protocolType == typeof(VNC))
-                {
-                    ProtocolEditControl = new VncForm(Server);
-                }
-                else if (protocolType == typeof(LocalApp))
-                {
-                    ProtocolEditControl = new AppForm(Server);
-                }
-                else if (protocolType == typeof(ProtocolBaseWithAddressPortUserPwd))
-                {
-                    ProtocolEditControl = new BaseFormWithAddressPortUserPwd(Server);
-                }
-                else if (protocolType == typeof(ProtocolBaseWithAddressPort))
-                {
-                    ProtocolEditControl = new BaseFormWithAddressPort(Server);
-                }
-                else if (protocolType == typeof(ProtocolBase))
-                {
-                    ProtocolEditControl = null;
-                }
-                else
-                    throw new NotImplementedException($"can not find from for '{protocolType.Name}' in {nameof(ServerEditorPageViewModel)}");
-            }
-            catch (Exception e)
-            {
-                SimpleLogHelper.Error(e);
-                throw;
-            }
+            });
         }
 
         private void UpdateRunners(string protocolName)
@@ -595,7 +656,7 @@ namespace _1RM.View.Editor
                         cmd = Server.CommandAfterDisconnected;
                     }
 
-                    var id = MaskLayerController.ShowProcessingRingMainWindow();
+                    MaskLayerController.ShowProcessingRing(assignLayerContainer: IoC.Get<MainWindowViewModel>());
                     Task.Factory.StartNew(() =>
                     {
                         try
@@ -616,10 +677,70 @@ namespace _1RM.View.Editor
                         }
                         finally
                         {
-                            MaskLayerController.HideProcessingRing(id);
+                            MaskLayerController.HideMask(IoC.Get<MainWindowViewModel>());
                         }
                     });
                 });
+            }
+        }
+
+
+
+
+
+
+
+        private RelayCommand? _cmdEditCredential;
+        public RelayCommand CmdEditCredential
+        {
+            get
+            {
+                return _cmdEditCredential ??= new RelayCommand((o) =>
+                {
+                    if (Server is ProtocolBaseWithAddressPort protocol)
+                    {
+                        var credential = o as Credential;
+                        var existedNames = protocol.AlternateCredentials.Select(x => x.Name).ToList();
+                        if (IsBuckEdit && _serversInBuckEdit?.Count() > 0)
+                        {
+                            foreach (var s in _serversInBuckEdit)
+                            {
+                                if (s is ProtocolBaseWithAddressPort p)
+                                    existedNames.AddRange(p.AlternateCredentials.Select(x => x.Name));
+                            }
+                        }
+                        existedNames = existedNames.Distinct().ToList();
+                        var vm = new AlternativeCredentialEditViewModel(protocol, existedNames, credential);
+                        MaskLayerController.ShowDialogWithMask(vm);
+                    }
+                }, o => Server is ProtocolBaseWithAddressPort);
+            }
+        }
+
+
+
+
+
+
+        private RelayCommand? _cmdDeleteCredential;
+        public RelayCommand CmdDeleteCredential
+        {
+            get
+            {
+                return _cmdDeleteCredential ??= new RelayCommand((o) =>
+                {
+                    if (o is Credential credential
+                        && Server is ProtocolBaseWithAddressPort protocol)
+                    {
+                        if (true == MessageBoxHelper.Confirm(IoC.Get<ILanguageService>().Translate("confirm_to_delete_selected"), ownerViewModel: IoC.Get<MainWindowViewModel>()))
+                        {
+                            if (protocol.AlternateCredentials.Contains(credential) == true)
+                            {
+                                protocol.AlternateCredentials.Remove(credential);
+                            }
+                        }
+                    }
+                }, o => Server is ProtocolBaseWithAddressPort);
             }
         }
     }

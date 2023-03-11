@@ -1,18 +1,14 @@
 ﻿using System;
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
 using System.Linq;
 using Newtonsoft.Json;
 using _1RM.Model.Protocol.Base;
 using _1RM.Service;
-using _1RM.Service.DataSource;
-using _1RM.Service.DataSource.Model;
 using _1RM.Utils.RdpFile;
 using Shawn.Utils;
 using System.Collections.Generic;
-using System.Windows.Media.Imaging;
-using Shawn.Utils.Wpf.Image;
+using _1RM.Utils;
+using Shawn.Utils.Wpf;
 
 namespace _1RM.Model.Protocol
 {
@@ -441,7 +437,7 @@ namespace _1RM.Model.Protocol
         /// <returns></returns>
         public RdpConfig ToRdpConfig()
         {
-            var rdpConfig = new RdpConfig(DisplayName, $"{this.Address}:{this.GetPort()}", this.UserName, DataService.DecryptOrReturnOriginalString(Password), RdpFileAdditionalSettings)
+            var rdpConfig = new RdpConfig(DisplayName, $"{this.Address}:{this.GetPort()}", this.UserName, UnSafeStringEncipher.DecryptOrReturnOriginalString(Password), RdpFileAdditionalSettings)
             {
                 Domain = this.Domain,
                 LoadBalanceInfo = this.LoadBalanceInfo,
@@ -687,12 +683,47 @@ namespace _1RM.Model.Protocol
             return rdp;
         }
 
-        public override bool ThisTimeConnWithFullScreen()
+        public override bool IsThisTimeConnWithFullScreen()
         {
             if (this.RdpFullScreenFlag == ERdpFullScreenFlag.EnableFullAllScreens
                 || this.IsConnWithFullScreen == true
                 || IoC.Get<LocalityService>().RdpLocalityGet(this.Id.ToString())?.FullScreenLastSessionIsFullScreen == true)
                 return true;
+            return false;
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+        public bool IsNeedRunWithMstsc()
+        {
+            if (MstscModeEnabled == true)
+            {
+                return true;
+            }
+
+            // for those people using 2+ monitors in different scale factors, we will try "mstsc.exe" instead of internal runner.
+            // check if screens are in different scale factors
+            int factor = (int)(new ScreenInfoEx(System.Windows.Forms.Screen.PrimaryScreen).ScaleFactor * 100);
+            if (IsThisTimeConnWithFullScreen()
+                && System.Windows.Forms.Screen.AllScreens.Length > 1
+                && RdpFullScreenFlag == ERdpFullScreenFlag.EnableFullAllScreens
+                && System.Windows.Forms.Screen.AllScreens.Select(screen => (int)(new ScreenInfoEx(screen).ScaleFactor * 100)).Any(factor2 => factor != factor2)
+                )
+            {
+                return true;
+            }
+
+
             return false;
         }
     }
