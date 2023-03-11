@@ -29,7 +29,7 @@ Set-Location $originalDirectory
 
 # Write-Output $versionString
 # Write-Output "::set-output name=Version::$versionString"
-"Version=$versionString" >> $env:GITHUB_ENV
+"BuildVersion=$versionString" >> $env:GITHUB_ENV
 
 # echo "Version=$versionString" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
 
