@@ -31,17 +31,66 @@ jobs:
         id: get_version
         run: ./scripts/Get-Version.ps1
 
-      - name: Get Version1
-        run: echo "V=${{steps.get_version.outputs.Version}}"
-      - name: Get Version2
-        run: echo "V=${{env.Version}}"
+      # Install the .NET Core workload
+      - name: Install .NET Core
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: 6.0.x
+
+      # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
+      - name: Setup MSBuild.exe
+        uses: microsoft/setup-msbuild@v1.0.2
+
+      # cache nuget packages
+      - name: Cache nuget packages
+        id: cache-nuget-packages
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('Ui/Ui.csproj') }}
+
+      # Restore nuget packages
+      - name: Restore nuget packages 📦️
+        run: msbuild $env:Main_Project /t:Restore /p:Configuration=$env:Configuration
+
+      # Run script
+      - shell: pwsh
+        env:
+          SUPER_SECRET: ${{ secrets.GLOBAL_STRING_ENCRYPTION_SLAT }}
+        run: |
+          ./scripts/Set-Slat.ps1 ${{ secrets.GLOBAL_STRING_ENCRYPTION_SLAT }} 
+          echo "${{ github.ref }}"
+          echo "%SUPER_SECRET%"
+          echo "${{ secrets.GLOBAL_STRING_ENCRYPTION_SLAT }}%"
+          echo "%GITHUB_SHA%"
           
+
+      - name: Build Net4.8
+        run: msbuild $env:Main_Project -t:rebuild -property:Configuration=ReleaseNet48
+      - uses: actions/upload-artifact@v3
+        with:
+          name: 1Remote${{env.Version}}-net4.8
+          path: Ui/bin/ReleaseNet48/net48
+
+      # Publish the application
+      - name: Publish the application
+        run: dotnet publish $env:Main_Project -p:PublishProfile=./Ui/Properties/PublishProfiles/x64-single.file.application.pubxml
+
+      # upload to artifact
+      - uses: actions/upload-artifact@v3
+        with:
+          name: 1Remote-${{env.Version}}
+          path: Ui/bin/Release/net6.0-windows/publish/win-x64
+          
+
+
       # zip
       - name: Easy Zip Files
         uses: vimtor/action-zip@v1
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: Ui
-          dest: 1Remote-${{steps.get_version.outputs.Version}}.zip
+          files: Ui/bin/Release/net6.0-windows/publish/win-x64
+          dest: 1Remote-${{env.Version}}.zip
 
       # release
       - name: Create Release
