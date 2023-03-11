@@ -25,7 +25,8 @@ if ($preRelease -eq "" -and $build -eq 0) {
 }
 
 #Write-Output $versionString
-Write-Output "::set-output name=Vesrion::$versionString"
+#Write-Output "::set-output name=Vesrion::$versionString"
+echo "Vesrion=$versionString" >> $GITHUB_ENV
 
 # Set the current directory back to the original location
 Set-Location $originalDirectory

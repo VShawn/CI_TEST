@@ -33,6 +33,7 @@ using Shawn.Utils.Interface;
 using Shawn.Utils.Wpf;
 using Shawn.Utils.Wpf.FileSystem;
 using Stylet;
+using Credential = CredentialManagement.Credential;
 
 namespace _1RM.View.ServerList
 {

@@ -23,6 +23,7 @@ using Shawn.Utils;
 using Shawn.Utils.Interface;
 using Shawn.Utils.Wpf;
 using Shawn.Utils.Wpf.FileSystem;
+using Credential = CredentialManagement.Credential;
 
 namespace _1RM.View.Editor
 {

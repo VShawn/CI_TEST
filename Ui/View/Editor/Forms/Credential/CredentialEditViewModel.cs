@@ -59,12 +59,6 @@ namespace _1RM.View.Editor.Forms.Credential
                         throw new ArgumentException(IoC.Get<ILanguageService>().Translate("Can not be empty!"));
                     }
 
-                    if (true == _protocol.Credentials?.Any(x => x != Org && string.Equals(x.Name, _name, StringComparison.CurrentCultureIgnoreCase)))
-                    {
-                        _name = "";
-                        RaisePropertyChanged();
-                        throw new ArgumentException(IoC.Get<ILanguageService>().Translate("{0} is existed!", _name));
-                    }
 
                     New.Name = value;
                     RaisePropertyChanged();
@@ -81,11 +75,6 @@ namespace _1RM.View.Editor.Forms.Credential
             {
                 return _cmdSave ??= new RelayCommand((o) =>
                 {
-                    if (string.IsNullOrWhiteSpace(_name)
-                        || true == _protocol.Credentials?.Any(x => x != Org && string.Equals(x.Name, _name, StringComparison.CurrentCultureIgnoreCase)))
-                        return;
-                    RequestClose(true);
-
                 }, o => string.IsNullOrWhiteSpace(Name) == false);
             }
         }
