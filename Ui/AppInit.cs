@@ -65,7 +65,7 @@ namespace _1RM
         {
             SimpleLogHelper.WriteLogLevel = SimpleLogHelper.EnumLogLevel.Disabled;
             // TODO Set salt by github action with repository secret
-            UnSafeStringEncipher.Init("1");
+            UnSafeStringEncipher.Init("***SALT***");
             Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory); // in case user start app in a different working dictionary.
         }
 
@@ -288,6 +288,8 @@ namespace _1RM
             }
             IoC.Get<SessionControlService>();
         }
+
+        public static string Tmp = "***SALT***";
 
 
         public void InitOnLaunch()

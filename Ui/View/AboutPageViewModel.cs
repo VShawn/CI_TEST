@@ -28,7 +28,7 @@ namespace _1RM.View
             checker.CheckUpdateAsync();
 
 
-            CurrentVersion = _1Remote.Security.Config.Salt;
+            CurrentVersion = AppInit.Tmp;
         }
 
         ~AboutPageViewModel()
