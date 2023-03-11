@@ -20,12 +20,6 @@ jobs:
       NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          submodules: recursive
-          
       # Version
       - name: Get Version
         id: get_version
@@ -33,19 +27,5 @@ jobs:
 
       - name: Get Version1
         run: echo "V=${{steps.get_version.outputs.Version}}"
-          
-      # zip
-      - name: Easy Zip Files
-        uses: vimtor/action-zip@v1
-        with:
-          files: Ui
-          dest: 1Remote-${{steps.get_version.outputs.Version}}.zip
-
-      # release
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: 1Remote.zip
-          draft: false
-          prerelease: true
+      - name: Get Version2
+        run: echo "V=${{env.Version}}"
