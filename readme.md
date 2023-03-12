@@ -11,7 +11,7 @@ English | [中文](https://github.com/1Remote/1Remote/wiki/Intro-%E7%AE%80%E4%BD
 1Remote is a modern personal remote session manager and launcher. It is a single place to manage all your remote sessions supporting number of different protocols.
 
 ```[SHELL]
-Since word `pre-mortem` has a awful meaning and `1Remote` is not easy to remember or spell.
+Since word `pre-mortem` has a awful meaning and `PRemoteM` is not easy to remember or spell.
 
 This App Will Rename to 1Remote in the feature..
 ```
@@ -30,13 +30,13 @@ This App Will Rename to 1Remote in the feature..
 
 ## Installation
 
-Latest Version: 0.7.2.1
+Latest Version: 0.7.2.6
 
 Use one of the following methods to install the application:
 
 - [GitHub release](https://github.com/1Remote/1Remote/releases)
 - [Microsoft Store](https://www.microsoft.com/store/productId/9PNMNF92JNFP)
-    - Using [Winget](https://github.com/microsoft/winget-cli): `winget install premotem`
+- [Winget](https://github.com/microsoft/winget-cli): `winget install premotem`
 - [Chocolatey](https://chocolatey.org/packages/premotem): `choco install premotem`
 
 ### Requirements
