@@ -10,6 +10,8 @@ on:
       - "*"
 jobs:
   job1:
+    permissions:
+      contents: write # for release-drafter/release-drafter to create a github release
     name: build_and_release
     runs-on: windows-latest
 
@@ -76,15 +78,15 @@ jobs:
       - name: Get Version
         id: get_version
         run: ./scripts/Get-Version.ps1
-        
+
       # Build Net4.8
-      - name: Publish the application 48
+      - name: Publish the application Net4.8
         run: dotnet publish $env:Main_Project -p:PublishProfile=./Ui/Properties/PublishProfiles/x64-net48.pubxml
       - uses: actions/upload-artifact@v3
         with:
           name: 1Remote-${{env.BuildVersion}}-net4.8(not recommended)
           path: Ui/bin/Release/net4.8-windows/publish
-  
+
       # Publish the application
       - name: Publish the application
         run: dotnet publish $env:Main_Project -p:PublishProfile=./Ui/Properties/PublishProfiles/x64-single.file.application.pubxml
@@ -92,6 +94,10 @@ jobs:
         with:
           name: 1Remote-${{env.BuildVersion}}
           path: Ui/bin/Release/net6.0-windows/publish/win-x64
+
+      - uses: release-drafter/release-drafter@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
 
       - name: Easy Zip Files
         uses: vimtor/action-zip@v1
