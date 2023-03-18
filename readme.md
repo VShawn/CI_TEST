@@ -24,7 +24,6 @@ This App Will Rename to 1Remote in the feature..
 - Detailed connection configuration: tags, icons, colors, connection scripts etc.
 - Multiple languages, themes and tabbed interface
 - [Import connections from mRemoteNG](https://raw.githubusercontent.com/1Remote/PRemoteM/Doc/DocPic/Migrate.jpg)
-- [Password encryption via RSA](https://github.com/1Remote/1Remote/wiki/Security)
 - Customizable runners, in SFTP \ FTP \ VNC \ etc. protocols, you can replace the internal runner with your favourite tools.[wiki](https://github.com/1Remote/1Remote/wiki/%5BProtocol%5D--Protocol-Runners)
 - Portable - just unpack and run
 
