@@ -118,7 +118,7 @@ jobs:
           draft: true
           prerelease: false
           body: |
-            ${{ steps.changes.outputs.* }}
+            ${{join(steps.run_tests.outputs.*, '\n')}}
 
       - uses: actions/setup-node@v3
         if: startsWith(github.ref, 'refs/tags/')
