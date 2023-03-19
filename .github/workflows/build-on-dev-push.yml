@@ -169,7 +169,7 @@ jobs:
       BuildVersion: ${{ steps.get_version.outputs.BuildVersion }}
       PreRelease: ${{ steps.get_version.outputs.PreRelease }}
 
-  release:
+  echos:
     name: Echo only
     runs-on: ubuntu-latest
     needs: job1
