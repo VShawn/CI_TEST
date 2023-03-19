@@ -79,7 +79,7 @@ jobs:
         id: get_version
         run: ./scripts/Get-Version.ps1
 
-      # Build Net4.8
+      # Publish the application Net4.8
       - name: Publish the application Net4.8
         run: dotnet publish $env:Main_Project -p:PublishProfile=./Ui/Properties/PublishProfiles/x64-net48.pubxml
       # artifact
@@ -95,7 +95,7 @@ jobs:
           files: Ui/bin/Release/net4.8-windows/publish
           dest: 1Remote-${{env.BuildVersion}}-net4.8.zip
 
-      # Publish the application
+      # Publish the application Net6.0
       - name: Publish the application
         run: dotnet publish $env:Main_Project -p:PublishProfile=./Ui/Properties/PublishProfiles/x64-single.file.application.pubxml
       # artifact
@@ -124,7 +124,7 @@ jobs:
           draft: true
           prerelease: false
 
-      # upload package
+      # upload package net6.x
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         if: startsWith(github.ref, 'refs/tags/')
@@ -136,7 +136,7 @@ jobs:
           asset_name: 1Remote-${{env.BuildVersion}}-net6-x64.zip
           asset_content_type: application/zip
 
-      # upload package
+      # upload package net4.8
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         if: startsWith(github.ref, 'refs/tags/')
@@ -153,7 +153,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           node-version: 16.x
-      - run: npx changelogithub --draft #--prerelease # or changelogithub@0.12 if ensure the stable result
+      - run: npx changelogithub #--draft #--prerelease # or changelogithub@0.12 if ensure the stable result
         if: startsWith(github.ref, 'refs/tags/')
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
