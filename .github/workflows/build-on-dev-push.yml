@@ -125,6 +125,12 @@ jobs:
           echo ${{needs.JobBuild.outputs.BuildVersion}}
           echo ${{needs.JobBuild.outputs.PreRelease}}
 
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
       # download artifact net6.x
       - uses: actions/download-artifact@v2
         with:
@@ -203,6 +209,12 @@ jobs:
         run: |
           echo ${{needs.JobBuild.outputs.BuildVersion}}
           echo ${{needs.JobBuild.outputs.PreRelease}}
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: recursive
 
       # download artifact net6.x
       - uses: actions/download-artifact@v2
@@ -288,15 +300,13 @@ jobs:
           name: ${{needs.JobBuild.outputs.artifact_net6x}}
           path: ${{needs.JobBuild.outputs.artifact_net6x}}
       # zip
-      - name: Easy Zip Files
-        uses: vimtor/action-zip@v1
+      - uses: vimtor/action-zip@v1
         with:
           files: ${{needs.JobBuild.outputs.artifact_net6x}}
           dest: ${{needs.JobBuild.outputs.artifact_net6x}}.zip
 
       # publish nightly with WebFreak001/deploy-nightly@v2.0.0
-      - name: Publish with
-        uses: WebFreak001/deploy-nightly@v2.0.0
+      - uses: WebFreak001/deploy-nightly@v2.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # automatically provided by github actions
         with:
@@ -310,8 +320,7 @@ jobs:
 
       # for 1Remote project
       # # publish nightly with WebFreak001/deploy-nightly@v2.0.0
-      # - name: Publish with
-      #   uses: WebFreak001/deploy-nightly@v2.0.0
+      # - uses: WebFreak001/deploy-nightly@v2.0.0
       #   env:
       #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # automatically provided by github actions
       #   with:
