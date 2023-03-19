@@ -165,14 +165,66 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+    outputs:
+      BuildVersion: ${{ steps.get_version.outputs.BuildVersion }}
+      PreRelease: ${{ steps.get_version.outputs.PreRelease }}
 
-  job2:
-    name: Build and publish docker image
+  release:
+    name: Echo only
     runs-on: ubuntu-latest
     needs: job1
-    # echo ${{env.BuildVersion}} and ${{env.PreRelease}}
     steps:
       - name: Echo
         run: |
-          echo ${{env.BuildVersion}}
-          echo ${{env.PreRelease}}
+          echo ${{needs.job1.outputs.BuildVersion}}
+          echo ${{needs.job1.outputs.PreRelease}}
+
+  release:
+    name: Build and publish docker image
+    runs-on: ubuntu-latest
+    needs: job1
+    if: |
+      startsWith(github.ref, 'refs/tags/') &&
+      ${{needs.job1.outputs.PreRelease}} == ""
+    steps:
+      - name: Echo
+        run: |
+          echo ${{needs.job1.outputs.BuildVersion}}
+          echo ${{needs.job1.outputs.PreRelease}}
+
+  nightly:
+    name: Build and publish docker image
+    runs-on: ubuntu-latest
+    needs: job1
+    if: ${{needs.job1.outputs.PreRelease}} != ""
+    steps:
+      - name: Echo
+        run: |
+          echo ${{needs.job1.outputs.BuildVersion}}
+          echo ${{needs.job1.outputs.PreRelease}}
+
+      # download artifact
+      - uses: actions/download-artifact@v2
+        with:
+          name: 1Remote-${{env.BuildVersion}}-net6-x64.zip
+          path: Ui/bin/Release/net6.0-windows/publish/win-x64
+      # zip
+      - name: Easy Zip Files
+        uses: vimtor/action-zip@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: Ui/bin/Release/net6.0-windows/publish/win-x64
+          dest: 1Remote-${{env.BuildVersion}}-net6-x64.zip
+
+      # publish with WebFreak001/deploy-nightly@v2.0.0
+      - name: Publish with
+        uses: WebFreak001/deploy-nightly@v2.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # automatically provided by github actions
+        with:
+          upload_url: https://uploads.github.com/repos/VShawn/CI_TEST/releases/96057517/assets{?name,label} # find out this value by opening https://api.github.com/repos/<owner>/<repo>/releases in your browser and copy the full "upload_url" value including the {?name,label} part
+          release_id: 96057517 # same as above (id can just be taken out the upload_url, it's used to find old releases)
+          asset_path: 1Remote-${{env.BuildVersion}}-net6-x64.zip # path to archive to upload
+          asset_name: 1Remote-${{env.BuildVersion}}-net6-x64-nightly-$$.zip # name to upload the release as, use $$ to insert date (YYYYMMDD) and 6 letter commit hash
+          asset_content_type: application/zip # required by GitHub API
+          max_releases: 7 # optional, if there are more releases than this matching the asset_name, the oldest ones are going to be deleted
