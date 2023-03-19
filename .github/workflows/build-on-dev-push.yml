@@ -151,6 +151,7 @@ jobs:
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
+        if: ${{needs.JobBuild.outputs.PreRelease}} == ""
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -158,6 +159,18 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: false
           prerelease: false
+      # make release
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        if: ${{needs.JobBuild.outputs.PreRelease}} != ""
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: true
 
       # upload package net6.x
       - name: Upload Release Asset
@@ -183,11 +196,15 @@ jobs:
 
       # set changelogs
       - uses: actions/setup-node@v3
-        if: startsWith(github.ref, 'refs/tags/')
         with:
           node-version: 16.x
+
       - run: npx changelogithub #--draft #--prerelease # or changelogithub@0.12 if ensure the stable result
-        if: startsWith(github.ref, 'refs/tags/')
+        if: ${{needs.JobBuild.outputs.PreRelease}} == ""
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - run: npx changelogithub --prerelease #--draft #--prerelease # or changelogithub@0.12 if ensure the stable result
+        if: ${{needs.JobBuild.outputs.PreRelease}} != ""
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
@@ -221,8 +238,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # automatically provided by github actions
         with:
-          upload_url: https://uploads.github.com/repos/VShawn/CI_TEST/releases/96057517/assets{?name,label} # find out this value by opening https://api.github.com/repos/<owner>/<repo>/releases in your browser and copy the full "upload_url" value including the {?name,label} part
-          release_id: 96057517 # same as above (id can just be taken out the upload_url, it's used to find old releases)
+          upload_url: https://uploads.github.com/repos/VShawn/CI_TEST/releases/96096169/assets{?name,label} # find out this value by opening https://api.github.com/repos/<owner>/<repo>/releases in your browser and copy the full "upload_url" value including the {?name,label} part
+          release_id: 96096169 # same as above (id can just be taken out the upload_url, it's used to find old releases)
           asset_path: ${{needs.JobBuild.outputs.artifact_net6x}}.zip # path to archive to upload
           asset_name: ${{needs.JobBuild.outputs.artifact_net6x}}-nightly-$$.zip # name to upload the release as, use $$ to insert date (YYYYMMDD) and 6 letter commit hash
           asset_content_type: application/zip # required by GitHub API
