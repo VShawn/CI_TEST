@@ -166,9 +166,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
     outputs:
-      BuildVersion: ${{ steps.get_version.outputs.BuildVersion }}
-      PreRelease: ${{ steps.get_version.outputs.PreRelease }}
+      BuildVersion: ${{env.BuildVersion}}
+      PreRelease: ${{env.PreRelease}}
 
+  # debug job, run only on push
   echos:
     name: Echo only
     runs-on: ubuntu-latest
@@ -179,8 +180,9 @@ jobs:
           echo ${{needs.job1.outputs.BuildVersion}}
           echo ${{needs.job1.outputs.PreRelease}}
 
-  release:
-    name: Build and publish docker image
+  # publish stable build, run only tag is not empty and pre-release is empty
+  StableRelease:
+    name: Stable publish
     runs-on: ubuntu-latest
     needs: job1
     if: |
@@ -192,11 +194,12 @@ jobs:
           echo ${{needs.job1.outputs.BuildVersion}}
           echo ${{needs.job1.outputs.PreRelease}}
 
-  nightly:
-    name: Build and publish docker image
+  # publish nightly build, run only tag is empty
+  Nightly:
+    name: Nightly publish
     runs-on: ubuntu-latest
     needs: job1
-    if: ${{needs.job1.outputs.PreRelease}} != ""
+    if: !startsWith(github.ref , 'refs/tags/')
     steps:
       - name: Echo
         run: |
@@ -216,7 +219,7 @@ jobs:
           files: Ui/bin/Release/net6.0-windows/publish/win-x64
           dest: 1Remote-${{env.BuildVersion}}-net6-x64.zip
 
-      # publish with WebFreak001/deploy-nightly@v2.0.0
+      # publish nightly with WebFreak001/deploy-nightly@v2.0.0
       - name: Publish with
         uses: WebFreak001/deploy-nightly@v2.0.0
         env:
@@ -228,3 +231,18 @@ jobs:
           asset_name: 1Remote-${{env.BuildVersion}}-net6-x64-nightly-$$.zip # name to upload the release as, use $$ to insert date (YYYYMMDD) and 6 letter commit hash
           asset_content_type: application/zip # required by GitHub API
           max_releases: 7 # optional, if there are more releases than this matching the asset_name, the oldest ones are going to be deleted
+
+
+      # for 1Remote project
+      # # publish nightly with WebFreak001/deploy-nightly@v2.0.0
+      # - name: Publish with
+      #   uses: WebFreak001/deploy-nightly@v2.0.0
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # automatically provided by github actions
+      #   with:
+      #     upload_url: https://uploads.github.com/repos/1Remote/1Remote/releases/96075099/assets{?name,label} # find out this value by opening https://api.github.com/repos/<owner>/<repo>/releases in your browser and copy the full "upload_url" value including the {?name,label} part
+      #     release_id: 96075099 # same as above (id can just be taken out the upload_url, it's used to find old releases)
+      #     asset_path: 1Remote-${{env.BuildVersion}}-net6-x64.zip # path to archive to upload
+      #     asset_name: 1Remote-${{env.BuildVersion}}-net6-x64-nightly-$$.zip # name to upload the release as, use $$ to insert date (YYYYMMDD) and 6 letter commit hash
+      #     asset_content_type: application/zip # required by GitHub API
+      #     max_releases: 7 # optional, if there are more releases than this matching the asset_name, the oldest ones are going to be deleted
