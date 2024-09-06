@@ -94,7 +94,7 @@ jobs:
       #  run: dotnet publish $env:Main_Project -p:PublishProfile=./Ui/Properties/PublishProfiles/x64-net48.pubxml
       #  # run: msbuild $env:Main_Project -t:rebuild -verbosity:diag -property:Configuration=ReleaseNet48
       ## artifact
-      #- uses: actions/upload-artifact@v3
+      #- uses: actions/upload-artifact@v4
       #  with:
       #    name: 1Remote-${{env.BuildVersion}}-net4.8(not recommended)
       #    path: Ui/bin/Release/net4.8-windows/publish
@@ -103,7 +103,7 @@ jobs:
       - name: Publish the application
         run: dotnet publish $env:Main_Project -p:PublishProfile=./Ui/Properties/PublishProfiles/x64-single.file.application.pubxml
       # artifact
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: 1Remote-${{env.BuildVersion}}-net6-x64
           path: Ui/bin/Release/net6.0-windows/publish/win-x64
@@ -136,7 +136,7 @@ jobs:
           submodules: recursive
 
       # download artifact net6.x
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4.1.7
         with:
           name: ${{needs.JobBuild.outputs.artifact_net6x}}
           path: ${{needs.JobBuild.outputs.artifact_net6x}}
@@ -148,7 +148,7 @@ jobs:
           dest: ${{needs.JobBuild.outputs.artifact_net6x}}.zip
 
       ## download artifact net4.8
-      #- uses: actions/download-artifact@v2
+      #- uses: actions/download-artifact@v4.1.7
       #  with:
       #    name: ${{needs.JobBuild.outputs.artifact_net48}}
       #    path: ${{needs.JobBuild.outputs.artifact_net48}}
@@ -194,9 +194,11 @@ jobs:
       #    asset_content_type: application/zip
 
       # set changelogs
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
-          node-version: 16.x
+          registry-url: https://registry.npmjs.org/
+          node-version: lts/*
+
       - run: npx changelogithub #--draft #--prerelease # or changelogithub@0.12 if ensure the stable result
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
@@ -222,7 +224,7 @@ jobs:
           submodules: recursive
 
       # download artifact net6.x
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4.1.7
         with:
           name: ${{needs.JobBuild.outputs.artifact_net6x}}
           path: ${{needs.JobBuild.outputs.artifact_net6x}}
@@ -234,7 +236,7 @@ jobs:
           dest: ${{needs.JobBuild.outputs.artifact_net6x}}.zip
 
       ## download artifact net4.8
-      #- uses: actions/download-artifact@v2
+      #- uses: actions/download-artifact@v4.1.7
       #  with:
       #    name: ${{needs.JobBuild.outputs.artifact_net48}}
       #    path: ${{needs.JobBuild.outputs.artifact_net48}}
@@ -303,7 +305,7 @@ jobs:
           echo ${{needs.JobBuild.outputs.PreRelease}}
 
       # download artifact net6.x
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4.1.7
         with:
           name: ${{needs.JobBuild.outputs.artifact_net6x}}
           path: ${{needs.JobBuild.outputs.artifact_net6x}}
@@ -319,8 +321,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # automatically provided by github actions
         with:
-          upload_url: https://uploads.github.com/repos/1Remote/1Remote/releases/96075099/assets{?name,label} # find out this value by opening https://api.github.com/repos/<owner>/<repo>/releases in your browser and copy the full "upload_url" value including the {?name,label} part
-          release_id: 96075099 # same as above (id can just be taken out the upload_url, it's used to find old releases)
+          upload_url: https://uploads.github.com/repos/VShawn/CI_TEST/releases/96096169/assets{?name,label} # find out this value by opening https://api.github.com/repos/<owner>/<repo>/releases in your browser and copy the full "upload_url" value including the {?name,label} part
+          release_id: 96096169 # same as above (id can just be taken out the upload_url, it's used to find old releases)
           asset_path: ${{needs.JobBuild.outputs.artifact_net6x}}.zip # path to archive to upload
           asset_name: ${{needs.JobBuild.outputs.artifact_net6x}}-nightly-$$.zip # name to upload the release as, use $$ to insert date (YYYYMMDD) and 6 letter commit hash
           asset_content_type: application/zip # required by GitHub API
